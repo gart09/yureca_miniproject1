@@ -33,6 +33,10 @@ public class MainFrame extends JFrame {
     private boolean behaviorHeaderSortingEnabled;
     private String behaviorSortColumn;
     private String behaviorSortDirection;
+    private BehaviorSearchMode behaviorSearchMode = BehaviorSearchMode.ALL;
+    private String behaviorNameKeyword = "";
+    private int behaviorMinScore = Integer.MIN_VALUE;
+    private int behaviorMaxScore = Integer.MAX_VALUE;
     private final String[] behaviorSortColumns = {"behavior_id", "name", "score"};
 
     public MainFrame() {
@@ -128,6 +132,7 @@ public class MainFrame extends JFrame {
             } else if (title.equals("행동")) {
                 int behaviorId = (int) resultTable.getValueAt(selectedRow, 0);
                 behaviorService.remove(behaviorId);
+                setBehaviorAllMode();
                 updateBehaviorTable(behaviorService.searchAll());
             }
             JOptionPane.showMessageDialog(this, "삭제되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
@@ -176,11 +181,7 @@ public class MainFrame extends JFrame {
         }
 
         try {
-            if (behaviorSortColumn == null) {
-                updateBehaviorTable(behaviorService.searchAll(), false);
-            } else {
-                updateBehaviorTable(behaviorService.searchAll(behaviorSortColumn, behaviorSortDirection), false);
-            }
+            updateBehaviorTable(searchBehaviorByCurrentMode(), false);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "정렬 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
         }
@@ -205,8 +206,75 @@ public class MainFrame extends JFrame {
             header.setCursor(Cursor.getDefaultCursor());
             behaviorSortColumn = null;
             behaviorSortDirection = null;
+            behaviorSearchMode = BehaviorSearchMode.ALL;
+            behaviorNameKeyword = "";
+            behaviorMinScore = Integer.MIN_VALUE;
+            behaviorMaxScore = Integer.MAX_VALUE;
         }
         header.repaint();
+    }
+
+    private List<BehaviorDto> searchBehaviorByCurrentMode() {
+        boolean sorted = behaviorSortColumn != null;
+
+        if (behaviorSearchMode == BehaviorSearchMode.NAME) {
+            if (sorted) {
+                return behaviorService.searchSimilarByName(behaviorNameKeyword, behaviorSortColumn, behaviorSortDirection);
+            }
+            return behaviorService.searchSimilarByName(behaviorNameKeyword);
+        }
+
+        if (behaviorSearchMode == BehaviorSearchMode.SCORE) {
+            List<BehaviorDto> behaviors = behaviorService.searchByScore(behaviorMinScore, behaviorMaxScore);
+            if (sorted) {
+                sortBehaviorResults(behaviors);
+            }
+            return behaviors;
+        }
+
+        if (sorted) {
+            return behaviorService.searchAll(behaviorSortColumn, behaviorSortDirection);
+        }
+        return behaviorService.searchAll();
+    }
+
+    private void sortBehaviorResults(List<BehaviorDto> behaviors) {
+        java.util.Comparator<BehaviorDto> comparator;
+
+        if ("name".equals(behaviorSortColumn)) {
+            comparator = java.util.Comparator.comparing(BehaviorDto::getName);
+        } else if ("score".equals(behaviorSortColumn)) {
+            comparator = java.util.Comparator.comparingInt(BehaviorDto::getScore);
+        } else {
+            comparator = java.util.Comparator.comparingInt(BehaviorDto::getBehaviorId);
+        }
+
+        if ("DESC".equals(behaviorSortDirection)) {
+            comparator = comparator.reversed();
+        }
+
+        Collections.sort(behaviors, comparator);
+    }
+
+    private void setBehaviorAllMode() {
+        behaviorSearchMode = BehaviorSearchMode.ALL;
+        behaviorNameKeyword = "";
+        behaviorMinScore = Integer.MIN_VALUE;
+        behaviorMaxScore = Integer.MAX_VALUE;
+    }
+
+    private void setBehaviorNameMode(String keyword) {
+        behaviorSearchMode = BehaviorSearchMode.NAME;
+        behaviorNameKeyword = keyword;
+        behaviorMinScore = Integer.MIN_VALUE;
+        behaviorMaxScore = Integer.MAX_VALUE;
+    }
+
+    private void setBehaviorScoreMode(int minScore, int maxScore) {
+        behaviorSearchMode = BehaviorSearchMode.SCORE;
+        behaviorNameKeyword = "";
+        behaviorMinScore = minScore;
+        behaviorMaxScore = maxScore;
     }
 
     private void handleModify() {
@@ -231,7 +299,10 @@ public class MainFrame extends JFrame {
              try {
                  if (title.equals("학생")) updateStudentTable(studentService.searchAll());
                  else if (title.equals("강사")) updateInstructorTable(instructorService.searchAll());
-                 else if (title.equals("행동")) updateBehaviorTable(behaviorService.searchAll());
+                 else if (title.equals("행동")) {
+                     setBehaviorAllMode();
+                     updateBehaviorTable(behaviorService.searchAll());
+                 }
              } catch (Exception ex) {
                  System.err.println("테이블 갱신 실패: " + ex.getMessage());
              }
@@ -304,6 +375,10 @@ public class MainFrame extends JFrame {
 
     private enum SortState {
         NONE, ASC, DESC
+    }
+
+    private enum BehaviorSearchMode {
+        ALL, NAME, SCORE
     }
 
     private class BehaviorHeaderRenderer extends JPanel implements TableCellRenderer {
@@ -589,7 +664,14 @@ public class MainFrame extends JFrame {
 
         searchByNameBtn.addActionListener(e -> {
             try {
-                updateBehaviorTable(behaviorService.searchSimilarByName(nameField.getText()));
+                String keyword = nameField.getText().trim();
+                if (keyword.isEmpty()) {
+                    setBehaviorAllMode();
+                    updateBehaviorTable(behaviorService.searchAll());
+                } else {
+                    setBehaviorNameMode(keyword);
+                    updateBehaviorTable(behaviorService.searchSimilarByName(keyword));
+                }
             } catch (CanNotFindException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "조회 실패", JOptionPane.WARNING_MESSAGE);
             }
@@ -597,6 +679,7 @@ public class MainFrame extends JFrame {
 
         searchAllByNameTabBtn.addActionListener(e -> {
             try {
+                setBehaviorAllMode();
                 updateBehaviorTable(behaviorService.searchAll());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
@@ -632,6 +715,7 @@ public class MainFrame extends JFrame {
                 String maxStr = maxScoreField.getText();
                 int min = minStr.isEmpty() ? Integer.MIN_VALUE : Integer.parseInt(minStr);
                 int max = maxStr.isEmpty() ? Integer.MAX_VALUE : Integer.parseInt(maxStr);
+                setBehaviorScoreMode(min, max);
                 updateBehaviorTable(behaviorService.searchByScore(min, max));
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "점수는 숫자로 입력해주세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
@@ -642,6 +726,7 @@ public class MainFrame extends JFrame {
 
         searchAllByScoreTabBtn.addActionListener(e -> {
             try {
+                setBehaviorAllMode();
                 updateBehaviorTable(behaviorService.searchAll());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
@@ -676,6 +761,7 @@ public class MainFrame extends JFrame {
             try {
                 behaviorService.add(new BehaviorDto(0, regNameField.getText(), Integer.parseInt(regScoreField.getText())));
                 JOptionPane.showMessageDialog(this, "행동 등록 완료");
+                setBehaviorAllMode();
                 updateBehaviorTable(behaviorService.searchAll());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "등록 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);

@@ -99,6 +99,43 @@ public class BehaviorDaoImp implements BehaviorDao {
 
         return result;
     }
+    
+    @Override
+    public List<BehaviorDto> searchSimilarByName(String name, String sortColumn, String sortDirection) 
+    		throws SQLException {
+    	Connection con = null;
+    	PreparedStatement stmt = null;
+    	ResultSet rs = null;
+    	List<BehaviorDto> result = new ArrayList<>();
+    	
+        String safeColumn = "behavior_id"; 
+        if ("name".equals(sortColumn) || "score".equals(sortColumn)) {
+            safeColumn = sortColumn;
+        }
+        String safeDirection = "DESC".equalsIgnoreCase(sortDirection) ? "DESC" : "ASC";
+
+        // 동적 쿼리
+        String sql = "SELECT * FROM behavior WHERE name LIKE ? ORDER BY " + safeColumn + " " + safeDirection;
+
+        try {
+            con = dbutil.getConnection();
+            stmt = con.prepareStatement(sql);
+            stmt.setString(1, "%" + name + "%"); // 검색어 바인딩
+
+            rs = stmt.executeQuery();
+            while(rs.next()){
+                BehaviorDto behaviorDto = new BehaviorDto();
+                behaviorDto.setBehaviorId(rs.getInt("behavior_id"));
+                behaviorDto.setName(rs.getString("name"));
+                behaviorDto.setScore(rs.getInt("score"));
+
+                result.add(behaviorDto);
+            }
+        } finally {
+            dbutil.close(stmt, con);
+        }
+        return result;
+    }
 
     @Override
     public BehaviorDto searchOneByName(String name) throws SQLException {
@@ -183,13 +220,8 @@ public class BehaviorDaoImp implements BehaviorDao {
 
         return result;
     }
-    
-    /**
-     * 오버로딩
-	 * 정렬 기준(sortColumn)과 오름/내림차순(sortDirection)을 파라미터로
-     * @param sortColumn
-     * @param sortDirection
-     */
+
+    @Override
     public List<BehaviorDto> searchAll(String sortColumn, String sortDirection) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
