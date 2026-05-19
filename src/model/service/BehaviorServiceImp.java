@@ -7,6 +7,7 @@ import model.dto.CanNotFindException;
 import model.dto.DuplicateBehaviorException;
 
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 
 public class BehaviorServiceImp implements  BehaviorService {
@@ -28,23 +29,11 @@ public class BehaviorServiceImp implements  BehaviorService {
     }
 
     @Override
-    public BehaviorDto searchOneByName(String name) {
-        try {
-            BehaviorDto find = dao.searchOneByName(name);
-            if (find == null) {
-                throw new CanNotFindException(name);
-            }
-            return find;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
-        }
-    }
-
-    @Override
     public void update(BehaviorDto behaviorDto) {
         try {
-            searchOneByName(behaviorDto.getName());
+            BehaviorDto find = dao.searchOneByName(behaviorDto.getName());
+            if(find != null && find.getBehaviorId() != behaviorDto.getBehaviorId())
+                throw new DuplicateBehaviorException(behaviorDto.getName());
             dao.update(behaviorDto);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -55,8 +44,8 @@ public class BehaviorServiceImp implements  BehaviorService {
     @Override
     public void remove(BehaviorDto behaviorDto) {
         try {
-            searchOneByName(behaviorDto.getName());
-            dao.remove(behaviorDto);
+            BehaviorDto find = dao.searchOneByName(behaviorDto.getName());
+            dao.remove(find);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("데이터베이스 수정 중 시스템 오류가 발생했습니다.", e);

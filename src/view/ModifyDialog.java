@@ -1,11 +1,16 @@
 package view;
 
+import model.dto.BehaviorDto;
+import model.service.BehaviorService;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 public class ModifyDialog extends JDialog {
-    public ModifyDialog(JFrame parent, String type, JTable resultTable, int selectedRow) {
+    private boolean isModified = false; // 수정을 통해 실제 변경이 일어났는지 여부를 부모 창에 알리기 위한 플래그
+
+    public ModifyDialog(JFrame parent, String type, JTable resultTable, int selectedRow, BehaviorService behaviorService) {
         super(parent, type + " 수정", true);
         setSize(300, 250);
         setLayout(new BorderLayout());
@@ -39,7 +44,6 @@ public class ModifyDialog extends JDialog {
         if (type.equals("학생") || type.equals("강사")) {
             gbc.gridx = 0; gbc.gridy = 2;
             formPanel.add(new JLabel("나이:"), gbc);
-            // 학생, 강사의 경우 나이 정보를 가져옴 (임시로 2번째 컬럼이라 가정, 실제 데이터 구조에 맞게 수정 필요)
             ageField = new JTextField(model.getColumnCount() > 2 ? model.getValueAt(selectedRow, 2).toString() : "");
             gbc.gridx = 1;
             formPanel.add(ageField, gbc);
@@ -49,7 +53,6 @@ public class ModifyDialog extends JDialog {
             int gridy = type.equals("학생") ? 3 : 2;
             gbc.gridx = 0; gbc.gridy = gridy;
             formPanel.add(new JLabel("점수:"), gbc);
-            // 행동의 경우 점수 정보 가져옴
             int scoreColIdx = type.equals("학생") ? 3 : 2;
             scoreField = new JTextField(model.getColumnCount() > scoreColIdx ? model.getValueAt(selectedRow, scoreColIdx).toString() : "");
             gbc.gridx = 1;
@@ -63,6 +66,8 @@ public class ModifyDialog extends JDialog {
         JButton btnConfirm = new JButton("확인");
         JButton btnCancel = new JButton("취소");
 
+        final JTextField finalScoreField = scoreField; // 람다 내부에서 사용하기 위해 final (effectively final)
+
         btnConfirm.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(
                     this,
@@ -72,9 +77,28 @@ public class ModifyDialog extends JDialog {
             );
 
             if (confirm == JOptionPane.YES_OPTION) {
-                // To-do: 실제 DB 업데이트 로직 추가
-                JOptionPane.showMessageDialog(this, "수정되었습니다.");
-                dispose();
+                try {
+                    int id = Integer.parseInt(idField.getText());
+                    String name = nameField.getText();
+
+                    if (type.equals("행동") && behaviorService != null) {
+                        int score = Integer.parseInt(finalScoreField.getText());
+                        BehaviorDto updatedDto = new BehaviorDto(id, name, score);
+                        
+                        behaviorService.update(updatedDto);
+                        isModified = true;
+                        JOptionPane.showMessageDialog(this, "수정되었습니다.");
+                        dispose();
+                    } else {
+                        // 학생, 강사의 수정 로직은 추후 추가
+                        JOptionPane.showMessageDialog(this, "해당 타입의 수정 기능은 준비중입니다.");
+                        dispose();
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "점수나 나이는 올바른 숫자 형식이어야 합니다.", "입력 오류", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "수정 중 오류가 발생했습니다: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -85,5 +109,9 @@ public class ModifyDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
 
         setLocationRelativeTo(parent);
+    }
+
+    public boolean isModified() {
+        return isModified;
     }
 }

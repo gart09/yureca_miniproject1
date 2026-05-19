@@ -6,7 +6,7 @@ public class BehaviorDto  implements Comparable<BehaviorDto> {
     String  name;
     int     score;
 
-    public BehaviorDto(int behaviorId, String name, int score, boolean isPositive) {
+    public BehaviorDto(int behaviorId, String name, int score) {
         this.behaviorId = behaviorId;
         this.name = name;
         this.score = score;

@@ -36,7 +36,7 @@ public class BehaviorDaoImp implements BehaviorDao {
     public void update(BehaviorDto behaviorDto) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
-        String sql = "UPDATE behavior SET name = ?, score = ? WHERE behaviorId = ?";
+        String sql = "UPDATE behavior SET name = ?, score = ? WHERE behavior_id = ?";
 
         try {
             con = dbutil.getConnection();

@@ -99,7 +99,7 @@ public class MainFrame extends JFrame {
                     int behaviorId = (int) resultTable.getValueAt(selectedRow, 0);
                     String name = (String) resultTable.getValueAt(selectedRow, 1);
                     int score = (int) resultTable.getValueAt(selectedRow, 2);
-                    BehaviorDto dtoToDelete = new BehaviorDto(behaviorId, name, score, score >= 0);
+                    BehaviorDto dtoToDelete = new BehaviorDto(behaviorId, name, score);
                     
                     behaviorService.remove(dtoToDelete);
                     JOptionPane.showMessageDialog(this, "삭제되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
@@ -159,7 +159,16 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        new ModifyDialog(this, title, resultTable, selectedRow).setVisible(true);
+        ModifyDialog dialog = new ModifyDialog(this, title, resultTable, selectedRow, behaviorService);
+        dialog.setVisible(true);
+        
+        if (dialog.isModified() && title.equals("행동")) {
+             try {
+                 updateBehaviorTable(behaviorService.searchAll());
+             } catch (Exception ex) {
+                 System.err.println("테이블 갱신 실패: " + ex.getMessage());
+             }
+        }
     }
 
     private void updateBehaviorTable(List<BehaviorDto> behaviors) {
@@ -290,7 +299,7 @@ public class MainFrame extends JFrame {
                 String name = regNameField.getText();
                 int score = Integer.parseInt(regScoreField.getText());
                 
-                behaviorService.add(new BehaviorDto(0, name, score, score >= 0));
+                behaviorService.add(new BehaviorDto(0, name, score)); // 수정됨: isPositive 제거
                 JOptionPane.showMessageDialog(this, "행동이 성공적으로 등록되었습니다.", "등록 성공", JOptionPane.INFORMATION_MESSAGE);
                 
                 regNameField.setText("");
