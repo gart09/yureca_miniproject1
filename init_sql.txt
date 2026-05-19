@@ -33,7 +33,8 @@ CREATE TABLE studentScoreHistory (
     behavior_id INT NOT NULL,
     score INT NOT NULL, -- 당시 부여된 점수
     date DATE NOT NULL,
-    FOREIGN KEY (student_id) REFERENCES student(student_id),
+    -- ON DELETE CASCADE 옵션 추가
+    FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE CASCADE,
     FOREIGN KEY (instructor_id) REFERENCES instructor(instructor_id),
     FOREIGN KEY (behavior_id) REFERENCES behavior(behavior_id)
 );
