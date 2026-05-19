@@ -217,6 +217,10 @@ public class MainFrame extends JFrame {
         JButton btnSearch = new JButton("학생 조회");
         gbcSearch.gridx = 0; gbcSearch.gridy = 2; gbcSearch.gridwidth = 2;
         searchPanel.add(btnSearch, gbcSearch);
+
+        JButton btnSearchAll = new JButton("전체 조회");
+        gbcSearch.gridx = 0; gbcSearch.gridy = 3; gbcSearch.gridwidth = 2;
+        searchPanel.add(btnSearchAll, gbcSearch);
         
         btnSearch.addActionListener(e -> {
             try {
@@ -227,6 +231,14 @@ public class MainFrame extends JFrame {
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnSearchAll.addActionListener(e -> {
+            try {
+                updateStudentTable(studentService.searchAll());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             }
         });
         
@@ -293,6 +305,10 @@ public class MainFrame extends JFrame {
         JButton btnSearch = new JButton("강사 조회");
         gbcSearch.gridx = 0; gbcSearch.gridy = 2; gbcSearch.gridwidth = 2;
         searchPanel.add(btnSearch, gbcSearch);
+
+        JButton btnSearchAll = new JButton("전체 조회");
+        gbcSearch.gridx = 0; gbcSearch.gridy = 3; gbcSearch.gridwidth = 2;
+        searchPanel.add(btnSearchAll, gbcSearch);
         
         btnSearch.addActionListener(e -> {
             try {
@@ -303,6 +319,14 @@ public class MainFrame extends JFrame {
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnSearchAll.addActionListener(e -> {
+            try {
+                updateInstructorTable(instructorService.searchAll());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             }
         });
         
@@ -370,6 +394,9 @@ public class MainFrame extends JFrame {
         JButton searchByNameBtn = new JButton("이름으로 조회");
         gbcName.gridx = 0; gbcName.gridy = 1; gbcName.gridwidth = 2;
         namePanel.add(searchByNameBtn, gbcName);
+        JButton searchAllByNameTabBtn = new JButton("전체 조회");
+        gbcName.gridx = 0; gbcName.gridy = 2; gbcName.gridwidth = 2;
+        namePanel.add(searchAllByNameTabBtn, gbcName);
         behaviorSearchTabs.addTab("이름으로 조회", namePanel);
 
         searchByNameBtn.addActionListener(e -> {
@@ -377,6 +404,14 @@ public class MainFrame extends JFrame {
                 updateBehaviorTable(behaviorService.searchSimilarByName(nameField.getText()));
             } catch (CanNotFindException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "조회 실패", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        searchAllByNameTabBtn.addActionListener(e -> {
+            try {
+                updateBehaviorTable(behaviorService.searchAll());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -398,6 +433,9 @@ public class MainFrame extends JFrame {
         JButton searchByScoreBtn = new JButton("점수로 조회");
         gbcScore.gridx = 0; gbcScore.gridy = 1; gbcScore.gridwidth = 4;
         scorePanel.add(searchByScoreBtn, gbcScore);
+        JButton searchAllByScoreTabBtn = new JButton("전체 조회");
+        gbcScore.gridx = 0; gbcScore.gridy = 2; gbcScore.gridwidth = 4;
+        scorePanel.add(searchAllByScoreTabBtn, gbcScore);
         behaviorSearchTabs.addTab("점수로 조회", scorePanel);
         
         searchByScoreBtn.addActionListener(e -> {
@@ -411,6 +449,14 @@ public class MainFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "점수는 숫자로 입력해주세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
             } catch (CanNotFindException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "조회 실패", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        searchAllByScoreTabBtn.addActionListener(e -> {
+            try {
+                updateBehaviorTable(behaviorService.searchAll());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             }
         });
         
