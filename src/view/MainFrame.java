@@ -15,6 +15,7 @@ public class MainFrame extends JFrame {
     private JTable resultTable;
     private JScrollPane scrollPane;
     private BehaviorService behaviorService;
+    private JTabbedPane tabbedPane;
 
     public MainFrame() {
         setTitle("Yureca Miniproject 1 - Main");
@@ -25,7 +26,7 @@ public class MainFrame extends JFrame {
         // Service Initialization
         behaviorService = new BehaviorServiceImp();
 
-        // Right half: Result List and Delete Button
+        // Right half: Result List and Action Buttons
         JPanel rightPanel = new JPanel(new BorderLayout());
         String[] defaultColumnNames = {"결과 목록"};
         Object[][] defaultData = {{"조회/등록 버튼을 클릭하세요."}};
@@ -34,17 +35,19 @@ public class MainFrame extends JFrame {
         scrollPane.setPreferredSize(new Dimension(350, 400));
         rightPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Delete button at the bottom of the result list
+        // Buttons at the bottom of the result list
         JPanel rightBottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        
+        JButton btnSort = new JButton("정렬");
+        JButton btnModify = new JButton("수정");
         JButton btnDeleteSelected = new JButton("선택 항목 삭제");
-        btnDeleteSelected.addActionListener(e -> {
-            if (resultTable.getSelectedRow() == -1) {
-                JOptionPane.showMessageDialog(this, "리스트에서 삭제할 항목을 선택해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
-            } else {
-                // To-do: Add delete logic based on the selected tab
-                new DeleteDialog(this).setVisible(true);
-            }
-        });
+        
+        btnSort.addActionListener(e -> handleSort());
+        btnModify.addActionListener(e -> handleModify());
+        btnDeleteSelected.addActionListener(e -> handleDelete());
+
+        rightBottomPanel.add(btnSort);
+        rightBottomPanel.add(btnModify);
         rightBottomPanel.add(btnDeleteSelected);
         rightPanel.add(rightBottomPanel, BorderLayout.SOUTH);
 
@@ -54,7 +57,7 @@ public class MainFrame extends JFrame {
         JPanel leftPanel = new JPanel(new BorderLayout());
 
         // Tabbed Pane (Left - Vertical Tab Layout equivalent)
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.LEFT);
+        tabbedPane = new JTabbedPane(JTabbedPane.LEFT);
         
         tabbedPane.addTab("학생", createTabPanel("학생"));
         tabbedPane.addTab("강사", createTabPanel("강사"));
@@ -69,7 +72,7 @@ public class MainFrame extends JFrame {
         rewardPanel.setBorder(BorderFactory.createTitledBorder("상벌점"));
         
         JButton btnRewardPenalty = new JButton("상벌점 부여");
-        btnRewardPenalty.addActionListener(e -> new RewardPenaltyFrame().setVisible(true));
+        btnRewardPenalty.addActionListener(e -> new RewardPenaltyFrame(behaviorService).setVisible(true));
         rewardPanel.add(btnRewardPenalty);
         bottomPanel.add(rewardPanel, BorderLayout.CENTER);
 
@@ -77,6 +80,86 @@ public class MainFrame extends JFrame {
         
         add(leftPanel, BorderLayout.CENTER);
         setLocationRelativeTo(null);
+    }
+
+    private void handleDelete() {
+        int selectedRow = resultTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "리스트에서 삭제할 항목을 선택해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int selectedTabIndex = tabbedPane.getSelectedIndex();
+        String title = tabbedPane.getTitleAt(selectedTabIndex);
+
+        if (title.equals("행동")) {
+            int confirm = JOptionPane.showConfirmDialog(this, "정말 삭제하시겠습니까?", "삭제 확인", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    int behaviorId = (int) resultTable.getValueAt(selectedRow, 0);
+                    String name = (String) resultTable.getValueAt(selectedRow, 1);
+                    int score = (int) resultTable.getValueAt(selectedRow, 2);
+                    BehaviorDto dtoToDelete = new BehaviorDto(behaviorId, name, score, score >= 0);
+                    
+                    behaviorService.remove(dtoToDelete);
+                    JOptionPane.showMessageDialog(this, "삭제되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
+                    updateBehaviorTable(behaviorService.searchAll());
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "삭제 중 오류가 발생했습니다: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } else {
+             new DeleteDialog(this).setVisible(true);
+        }
+    }
+
+    private void handleSort() {
+        int selectedTabIndex = tabbedPane.getSelectedIndex();
+        String title = tabbedPane.getTitleAt(selectedTabIndex);
+        JPopupMenu sortMenu = new JPopupMenu();
+
+        if (title.equals("학생")) {
+            sortMenu.add(new JMenuItem("이름순 정렬"));
+            sortMenu.add(new JMenuItem("나이순 정렬"));
+            sortMenu.add(new JMenuItem("점수순 정렬"));
+        } else if (title.equals("강사")) {
+            sortMenu.add(new JMenuItem("이름순 정렬"));
+            sortMenu.add(new JMenuItem("나이순 정렬"));
+        } else if (title.equals("행동")) {
+            sortMenu.add(new JMenuItem("이름순 정렬"));
+            sortMenu.add(new JMenuItem("점수순 정렬"));
+        } else {
+            JOptionPane.showMessageDialog(this, "이 탭에서는 정렬을 지원하지 않습니다.", "안내", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        for(Component comp : sortMenu.getComponents()) {
+            if(comp instanceof JMenuItem) {
+                ((JMenuItem)comp).addActionListener(e -> {
+                    JOptionPane.showMessageDialog(this, ((JMenuItem)e.getSource()).getText() + " 기능은 준비중입니다.");
+                });
+            }
+        }
+        
+        sortMenu.show(this, 350, 400); 
+    }
+
+    private void handleModify() {
+        int selectedRow = resultTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "리스트에서 수정할 항목을 선택해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int selectedTabIndex = tabbedPane.getSelectedIndex();
+        String title = tabbedPane.getTitleAt(selectedTabIndex);
+        
+        if(title.equals("최근 이력")) {
+            JOptionPane.showMessageDialog(this, "이력은 수정할 수 없습니다.", "안내", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        new ModifyDialog(this, title, resultTable, selectedRow).setVisible(true);
     }
 
     private void updateBehaviorTable(List<BehaviorDto> behaviors) {
@@ -95,7 +178,6 @@ public class MainFrame extends JFrame {
     }
 
     private JPanel createTabPanel(String type) {
-        // This panel is for Student and Instructor, remains unchanged for now.
         JPanel wrapper = new JPanel(new BorderLayout());
         
         JTabbedPane innerTabPane = new JTabbedPane();
@@ -211,7 +293,6 @@ public class MainFrame extends JFrame {
                 behaviorService.add(new BehaviorDto(0, name, score, score >= 0));
                 JOptionPane.showMessageDialog(this, "행동이 성공적으로 등록되었습니다.", "등록 성공", JOptionPane.INFORMATION_MESSAGE);
                 
-                // Clear fields and refresh table
                 regNameField.setText("");
                 regScoreField.setText("");
                 updateBehaviorTable(behaviorService.searchAll());

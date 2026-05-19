@@ -58,7 +58,7 @@ public class BehaviorDaoImp implements BehaviorDao {
     public void remove(BehaviorDto behaveDto) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
-        String sql = "DELETE FROM behavior WHERE behaviorId = ?";
+        String sql = "DELETE FROM behavior WHERE behavior_id = ?";
 
         try {
             con = dbutil.getConnection();
