@@ -113,12 +113,12 @@ public class BehaviorDaoImp implements BehaviorDao {
             stmt = con.prepareStatement(sql);
             stmt.setString(1, name);
             rs = stmt.executeQuery();
-            if(rs.next()){
+            if(rs.next()) {
                 behaviorDto.setBehaviorId(rs.getInt("behavior_id"));
                 behaviorDto.setName(rs.getString("name"));
                 behaviorDto.setScore(rs.getInt("score"));
             } else {
-                throw new SQLException("검색 결과가 없습니다.");
+                return null;
             }
         } finally {
             dbutil.close(stmt, con);

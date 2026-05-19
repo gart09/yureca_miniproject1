@@ -31,7 +31,7 @@ public class BehaviorServiceImp implements  BehaviorService {
     public BehaviorDto searchOneByName(String name) {
         try {
             BehaviorDto find = dao.searchOneByName(name);
-            if (find != null) {
+            if (find == null) {
                 throw new CanNotFindException(name);
             }
             return find;
