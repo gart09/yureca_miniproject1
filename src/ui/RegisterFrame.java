@@ -6,6 +6,7 @@ import java.awt.*;
 public class RegisterFrame extends JFrame {
     private JPanel cards;
     private CardLayout cardLayout;
+    private JLabel statusLabel;
 
     public RegisterFrame() {
         setTitle("신규 등록");
@@ -22,6 +23,15 @@ public class RegisterFrame extends JFrame {
         buttonPanel.add(btnInstructor);
         buttonPanel.add(btnBehavior);
         add(buttonPanel, BorderLayout.NORTH);
+        
+        // Status Label to show which registration is active
+        statusLabel = new JLabel("--- 학생 등록 ---", SwingConstants.CENTER);
+        statusLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
+        // Center Panel to hold Status Label + Forms
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(statusLabel, BorderLayout.NORTH);
 
         // Card Panel for dynamic forms
         cardLayout = new CardLayout();
@@ -31,19 +41,31 @@ public class RegisterFrame extends JFrame {
         cards.add(createInstructorForm(), "Instructor");
         cards.add(createBehaviorForm(), "Behavior");
 
-        add(cards, BorderLayout.CENTER);
+        centerPanel.add(cards, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
 
         // Action Listeners for buttons
-        btnStudent.addActionListener(e -> cardLayout.show(cards, "Student"));
-        btnInstructor.addActionListener(e -> cardLayout.show(cards, "Instructor"));
-        btnBehavior.addActionListener(e -> cardLayout.show(cards, "Behavior"));
+        btnStudent.addActionListener(e -> {
+            cardLayout.show(cards, "Student");
+            statusLabel.setText("--- 학생 등록 ---");
+        });
+        
+        btnInstructor.addActionListener(e -> {
+            cardLayout.show(cards, "Instructor");
+            statusLabel.setText("--- 강사 등록 ---");
+        });
+        
+        btnBehavior.addActionListener(e -> {
+            cardLayout.show(cards, "Behavior");
+            statusLabel.setText("--- 행동 등록 ---");
+        });
 
         setLocationRelativeTo(null);
     }
 
     private JPanel createStudentForm() {
         JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 50, 20, 50));
         panel.add(new JLabel("이름:"));
         panel.add(new JTextField());
         panel.add(new JLabel("나이:"));
@@ -60,7 +82,7 @@ public class RegisterFrame extends JFrame {
 
     private JPanel createInstructorForm() {
         JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 50, 20, 50));
         panel.add(new JLabel("이름:"));
         panel.add(new JTextField());
         panel.add(new JLabel("나이:"));
@@ -77,7 +99,7 @@ public class RegisterFrame extends JFrame {
 
     private JPanel createBehaviorForm() {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 50, 20, 50));
         panel.add(new JLabel("행동 이름:"));
         panel.add(new JTextField());
         panel.add(new JLabel("점수:"));
