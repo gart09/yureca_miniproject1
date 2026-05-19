@@ -52,6 +52,16 @@ public class StudentServiceImp implements  StudentService {
     }
 
     @Override
+    public List<StudentDto> searchSimilarByName(String name, String sortColumn, String sortDirection) {
+        try {
+            return dao.searchSimilarByName(name, sortColumn, sortDirection);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
+        }
+    }
+
+    @Override
     public List<StudentDto> searchByScore(int minScore, int maxScore) {
         try {
             return dao.searchByScore(minScore, maxScore);
@@ -65,6 +75,16 @@ public class StudentServiceImp implements  StudentService {
     public List<StudentDto> searchAll() {
         try {
             return dao.searchAll();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
+        }
+    }
+
+    @Override
+    public List<StudentDto> searchAll(String sortColumn, String sortDirection) {
+        try {
+            return dao.searchAll(sortColumn, sortDirection);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);

@@ -31,13 +31,20 @@ public class MainFrame extends JFrame {
     private JTabbedPane tabbedPane;
     private TableCellRenderer defaultHeaderRenderer;
     private boolean behaviorHeaderSortingEnabled;
+    private String currentResultType;
     private String behaviorSortColumn;
     private String behaviorSortDirection;
+    private BehaviorSearchMode studentSearchMode = BehaviorSearchMode.ALL;
+    private String studentNameKeyword = "";
+    private BehaviorSearchMode instructorSearchMode = BehaviorSearchMode.ALL;
+    private String instructorNameKeyword = "";
     private BehaviorSearchMode behaviorSearchMode = BehaviorSearchMode.ALL;
     private String behaviorNameKeyword = "";
     private int behaviorMinScore = Integer.MIN_VALUE;
     private int behaviorMaxScore = Integer.MAX_VALUE;
-    private final String[] behaviorSortColumns = {"behavior_id", "name", "score"};
+    private final String[] studentSortColumns = {null, "name", "age", "score"};
+    private final String[] instructorSortColumns = {null, "name", "age"};
+    private final String[] behaviorSortColumns = {null, "name", "score"};
 
     public MainFrame() {
         setTitle("Yureca Miniproject 1 - Main");
@@ -124,10 +131,12 @@ public class MainFrame extends JFrame {
             if (title.equals("학생")) {
                 int studentId = (int) resultTable.getValueAt(selectedRow, 0);
                 studentService.remove(studentId);
+                setStudentAllMode();
                 updateStudentTable(studentService.searchAll());
             } else if (title.equals("강사")) {
                 int instructorId = (int) resultTable.getValueAt(selectedRow, 0);
                 instructorService.remove(instructorId);
+                setInstructorAllMode();
                 updateInstructorTable(instructorService.searchAll());
             } else if (title.equals("행동")) {
                 int behaviorId = (int) resultTable.getValueAt(selectedRow, 0);
@@ -155,7 +164,7 @@ public class MainFrame extends JFrame {
     }
 
     private void handleResultTableHeaderClick(MouseEvent e) {
-        if (!isBehaviorResultTable()) {
+        if (!isSortableResultTable()) {
             return;
         }
 
@@ -165,11 +174,11 @@ public class MainFrame extends JFrame {
         }
 
         int modelColumn = resultTable.convertColumnIndexToModel(viewColumn);
-        if (modelColumn < 0 || modelColumn >= behaviorSortColumns.length) {
+        String clickedColumn = getSortableColumn(modelColumn);
+        if (clickedColumn == null) {
             return;
         }
 
-        String clickedColumn = behaviorSortColumns[modelColumn];
         if (!clickedColumn.equals(behaviorSortColumn)) {
             behaviorSortColumn = clickedColumn;
             behaviorSortDirection = "ASC";
@@ -181,18 +190,51 @@ public class MainFrame extends JFrame {
         }
 
         try {
-            updateBehaviorTable(searchBehaviorByCurrentMode(), false);
+            String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
+            if ("학생".equals(title)) {
+                updateStudentTable(searchStudentByCurrentMode(), false);
+            } else if ("강사".equals(title)) {
+                updateInstructorTable(searchInstructorByCurrentMode(), false);
+            } else if ("행동".equals(title)) {
+                updateBehaviorTable(searchBehaviorByCurrentMode(), false);
+            }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "정렬 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private boolean isBehaviorResultTable() {
+    private boolean isSortableResultTable() {
         int selectedTabIndex = tabbedPane.getSelectedIndex();
-        return selectedTabIndex >= 0
-                && behaviorHeaderSortingEnabled
-                && "행동".equals(tabbedPane.getTitleAt(selectedTabIndex))
-                && resultTable.getColumnCount() == behaviorSortColumns.length;
+        if (selectedTabIndex < 0 || !behaviorHeaderSortingEnabled) {
+            return false;
+        }
+
+        String title = tabbedPane.getTitleAt(selectedTabIndex);
+        if (!title.equals(currentResultType)) {
+            return false;
+        }
+
+        return ("학생".equals(title) && resultTable.getColumnCount() == studentSortColumns.length)
+                || ("강사".equals(title) && resultTable.getColumnCount() == instructorSortColumns.length)
+                || ("행동".equals(title) && resultTable.getColumnCount() == behaviorSortColumns.length);
+    }
+
+    private String getSortableColumn(int modelColumn) {
+        String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
+        String[] sortColumns = null;
+        if ("학생".equals(title)) {
+            sortColumns = studentSortColumns;
+        } else if ("강사".equals(title)) {
+            sortColumns = instructorSortColumns;
+        } else if ("행동".equals(title)) {
+            sortColumns = behaviorSortColumns;
+        }
+
+        if (sortColumns == null || modelColumn < 0 || modelColumn >= sortColumns.length) {
+            return null;
+        }
+
+        return sortColumns[modelColumn];
     }
 
     private void setBehaviorHeaderSortingEnabled(boolean enabled) {
@@ -204,14 +246,51 @@ public class MainFrame extends JFrame {
         } else {
             header.setDefaultRenderer(defaultHeaderRenderer);
             header.setCursor(Cursor.getDefaultCursor());
+            currentResultType = null;
             behaviorSortColumn = null;
             behaviorSortDirection = null;
+            studentSearchMode = BehaviorSearchMode.ALL;
+            studentNameKeyword = "";
+            instructorSearchMode = BehaviorSearchMode.ALL;
+            instructorNameKeyword = "";
             behaviorSearchMode = BehaviorSearchMode.ALL;
             behaviorNameKeyword = "";
             behaviorMinScore = Integer.MIN_VALUE;
             behaviorMaxScore = Integer.MAX_VALUE;
         }
         header.repaint();
+    }
+
+    private List<StudentDto> searchStudentByCurrentMode() {
+        boolean sorted = behaviorSortColumn != null;
+
+        if (studentSearchMode == BehaviorSearchMode.NAME) {
+            if (sorted) {
+                return studentService.searchSimilarByName(studentNameKeyword, behaviorSortColumn, behaviorSortDirection);
+            }
+            return studentService.searchSimilarByName(studentNameKeyword);
+        }
+
+        if (sorted) {
+            return studentService.searchAll(behaviorSortColumn, behaviorSortDirection);
+        }
+        return studentService.searchAll();
+    }
+
+    private List<InstructorDto> searchInstructorByCurrentMode() {
+        boolean sorted = behaviorSortColumn != null;
+
+        if (instructorSearchMode == BehaviorSearchMode.NAME) {
+            if (sorted) {
+                return instructorService.searchSimilarByName(instructorNameKeyword, behaviorSortColumn, behaviorSortDirection);
+            }
+            return instructorService.searchSimilarByName(instructorNameKeyword);
+        }
+
+        if (sorted) {
+            return instructorService.searchAll(behaviorSortColumn, behaviorSortDirection);
+        }
+        return instructorService.searchAll();
     }
 
     private List<BehaviorDto> searchBehaviorByCurrentMode() {
@@ -263,6 +342,26 @@ public class MainFrame extends JFrame {
         behaviorMaxScore = Integer.MAX_VALUE;
     }
 
+    private void setStudentAllMode() {
+        studentSearchMode = BehaviorSearchMode.ALL;
+        studentNameKeyword = "";
+    }
+
+    private void setStudentNameMode(String keyword) {
+        studentSearchMode = BehaviorSearchMode.NAME;
+        studentNameKeyword = keyword;
+    }
+
+    private void setInstructorAllMode() {
+        instructorSearchMode = BehaviorSearchMode.ALL;
+        instructorNameKeyword = "";
+    }
+
+    private void setInstructorNameMode(String keyword) {
+        instructorSearchMode = BehaviorSearchMode.NAME;
+        instructorNameKeyword = keyword;
+    }
+
     private void setBehaviorNameMode(String keyword) {
         behaviorSearchMode = BehaviorSearchMode.NAME;
         behaviorNameKeyword = keyword;
@@ -297,8 +396,14 @@ public class MainFrame extends JFrame {
         
         if (dialog.isModified()) {
              try {
-                 if (title.equals("학생")) updateStudentTable(studentService.searchAll());
-                 else if (title.equals("강사")) updateInstructorTable(instructorService.searchAll());
+                 if (title.equals("학생")) {
+                     setStudentAllMode();
+                     updateStudentTable(studentService.searchAll());
+                 }
+                 else if (title.equals("강사")) {
+                     setInstructorAllMode();
+                     updateInstructorTable(instructorService.searchAll());
+                 }
                  else if (title.equals("행동")) {
                      setBehaviorAllMode();
                      updateBehaviorTable(behaviorService.searchAll());
@@ -311,23 +416,43 @@ public class MainFrame extends JFrame {
 
     // --- Table Update Methods ---
     private void updateStudentTable(List<StudentDto> students) {
-        setBehaviorHeaderSortingEnabled(false);
+        updateStudentTable(students, true);
+    }
+
+    private void updateStudentTable(List<StudentDto> students, boolean resetSort) {
+        if (resetSort) {
+            behaviorSortColumn = null;
+            behaviorSortDirection = null;
+        }
+
         String[] columnNames = {"ID", "이름", "나이", "점수"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         for (StudentDto dto : students) {
             model.addRow(new Object[]{dto.getStudentId(), dto.getName(), dto.getAge(), dto.getScore()});
         }
         resultTable.setModel(model);
+        currentResultType = "학생";
+        setBehaviorHeaderSortingEnabled(true);
     }
 
     private void updateInstructorTable(List<InstructorDto> instructors) {
-        setBehaviorHeaderSortingEnabled(false);
+        updateInstructorTable(instructors, true);
+    }
+
+    private void updateInstructorTable(List<InstructorDto> instructors, boolean resetSort) {
+        if (resetSort) {
+            behaviorSortColumn = null;
+            behaviorSortDirection = null;
+        }
+
         String[] columnNames = {"ID", "이름", "나이"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         for (InstructorDto dto : instructors) {
             model.addRow(new Object[]{dto.getInstructorId(), dto.getName(), dto.getAge()});
         }
         resultTable.setModel(model);
+        currentResultType = "강사";
+        setBehaviorHeaderSortingEnabled(true);
     }
 
     private void updateBehaviorTable(List<BehaviorDto> behaviors) {
@@ -346,6 +471,7 @@ public class MainFrame extends JFrame {
             model.addRow(new Object[]{dto.getBehaviorId(), dto.getName(), dto.getScore()});
         }
         resultTable.setModel(model);
+        currentResultType = "행동";
 
         if (resultTable.getColumnModel().getColumnCount() > 1) {
             // 인덱스 1번 ("이름" 열)을 가져옵니다.
@@ -362,11 +488,16 @@ public class MainFrame extends JFrame {
     }
 
     private SortState getBehaviorSortState(int modelColumn) {
-        if (behaviorSortColumn == null || modelColumn < 0 || modelColumn >= behaviorSortColumns.length) {
+        String column = getSortableColumn(modelColumn);
+        if (column == null) {
+            return SortState.NOT_SORTABLE;
+        }
+
+        if (behaviorSortColumn == null) {
             return SortState.NONE;
         }
 
-        if (!behaviorSortColumns[modelColumn].equals(behaviorSortColumn)) {
+        if (!column.equals(behaviorSortColumn)) {
             return SortState.NONE;
         }
 
@@ -374,7 +505,7 @@ public class MainFrame extends JFrame {
     }
 
     private enum SortState {
-        NONE, ASC, DESC
+        NOT_SORTABLE, NONE, ASC, DESC
     }
 
     private enum BehaviorSearchMode {
@@ -425,16 +556,20 @@ public class MainFrame extends JFrame {
 
         @Override
         public int getIconWidth() {
-            return WIDTH;
+            return state == SortState.NOT_SORTABLE ? 0 : WIDTH;
         }
 
         @Override
         public int getIconHeight() {
-            return HEIGHT;
+            return state == SortState.NOT_SORTABLE ? 0 : HEIGHT;
         }
 
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
+            if (state == SortState.NOT_SORTABLE) {
+                return;
+            }
+
             Graphics2D g2 = (Graphics2D) g.create();
             Color active = new Color(60, 60, 60);
             Color inactive = new Color(170, 170, 170);
@@ -487,9 +622,12 @@ public class MainFrame extends JFrame {
         
         btnSearch.addActionListener(e -> {
             try {
-                if (!nameField.getText().trim().isEmpty()) {
-                    updateStudentTable(studentService.searchSimilarByName(nameField.getText()));
+                String keyword = nameField.getText().trim();
+                if (!keyword.isEmpty()) {
+                    setStudentNameMode(keyword);
+                    updateStudentTable(studentService.searchSimilarByName(keyword));
                 } else {
+                    setStudentAllMode();
                     updateStudentTable(studentService.searchAll());
                 }
             } catch (Exception ex) {
@@ -499,6 +637,7 @@ public class MainFrame extends JFrame {
 
         btnSearchAll.addActionListener(e -> {
             try {
+                setStudentAllMode();
                 updateStudentTable(studentService.searchAll());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
@@ -535,6 +674,7 @@ public class MainFrame extends JFrame {
             try {
                 studentService.add(new StudentDto(0, regNameField.getText(), Integer.parseInt(regAgeField.getText()), 0));
                 JOptionPane.showMessageDialog(this, "학생 등록 완료");
+                setStudentAllMode();
                 updateStudentTable(studentService.searchAll());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "등록 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
@@ -575,9 +715,12 @@ public class MainFrame extends JFrame {
         
         btnSearch.addActionListener(e -> {
             try {
-                if (!nameField.getText().trim().isEmpty()) {
-                    updateInstructorTable(instructorService.searchSimilarByName(nameField.getText()));
+                String keyword = nameField.getText().trim();
+                if (!keyword.isEmpty()) {
+                    setInstructorNameMode(keyword);
+                    updateInstructorTable(instructorService.searchSimilarByName(keyword));
                 } else {
+                    setInstructorAllMode();
                     updateInstructorTable(instructorService.searchAll());
                 }
             } catch (Exception ex) {
@@ -587,6 +730,7 @@ public class MainFrame extends JFrame {
 
         btnSearchAll.addActionListener(e -> {
             try {
+                setInstructorAllMode();
                 updateInstructorTable(instructorService.searchAll());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
@@ -623,6 +767,7 @@ public class MainFrame extends JFrame {
             try {
                 instructorService.add(new InstructorDto(0, regNameField.getText(), Integer.parseInt(regAgeField.getText())));
                 JOptionPane.showMessageDialog(this, "강사 등록 완료");
+                setInstructorAllMode();
                 updateInstructorTable(instructorService.searchAll());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "등록 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);

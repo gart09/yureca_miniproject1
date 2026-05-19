@@ -104,6 +104,39 @@ public class StudentDaoImp implements StudentDao {
     }
 
     @Override
+    public List<StudentDto> searchSimilarByName(String name, String sortColumn, String sortDirection) throws SQLException {
+        Connection con = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<StudentDto> result = new ArrayList<>();
+        String safeColumn = getSortableColumn(sortColumn);
+        String safeDirection = getSortDirection(sortDirection);
+        String sql = "SELECT * FROM student WHERE name = ? ORDER BY "
+                + safeColumn + " " + safeDirection + ", student_id ASC";
+
+        try {
+            con = dbutil.getConnection();
+            stmt = con.prepareStatement(sql);
+            stmt.setString(1, name);
+
+            rs = stmt.executeQuery();
+            while(rs.next()){
+                StudentDto StudentDto = new StudentDto();
+                StudentDto.setStudentId(rs.getInt("student_id"));
+                StudentDto.setName(rs.getString("name"));
+                StudentDto.setAge(rs.getInt("age"));
+                StudentDto.setScore(rs.getInt("score"));
+
+                result.add(StudentDto);
+            }
+        } finally {
+            dbutil.close(stmt, con);
+        }
+
+        return result;
+    }
+
+    @Override
     public List<StudentDto> searchByScore(int minScore, int maxScore) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
@@ -161,5 +194,47 @@ public class StudentDaoImp implements StudentDao {
         }
 
         return result;
+    }
+
+    @Override
+    public List<StudentDto> searchAll(String sortColumn, String sortDirection) throws SQLException {
+        Connection con = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<StudentDto> result = new ArrayList<>();
+        String safeColumn = getSortableColumn(sortColumn);
+        String safeDirection = getSortDirection(sortDirection);
+        String sql = "SELECT * FROM student ORDER BY " + safeColumn + " " + safeDirection + ", student_id ASC";
+
+        try {
+            con = dbutil.getConnection();
+            stmt = con.prepareStatement(sql);
+
+            rs = stmt.executeQuery();
+            while(rs.next()){
+                StudentDto StudentDto = new StudentDto();
+                StudentDto.setStudentId(rs.getInt("student_id"));
+                StudentDto.setName(rs.getString("name"));
+                StudentDto.setAge(rs.getInt("age"));
+                StudentDto.setScore(rs.getInt("score"));
+
+                result.add(StudentDto);
+            }
+        } finally {
+            dbutil.close(stmt, con);
+        }
+
+        return result;
+    }
+
+    private String getSortableColumn(String sortColumn) {
+        if ("name".equals(sortColumn) || "age".equals(sortColumn) || "score".equals(sortColumn)) {
+            return sortColumn;
+        }
+        return "name";
+    }
+
+    private String getSortDirection(String sortDirection) {
+        return "DESC".equalsIgnoreCase(sortDirection) ? "DESC" : "ASC";
     }
 }

@@ -9,6 +9,8 @@ public interface StudentService {
     void update(StudentDto studentDto);
     void remove(int id);
     List<StudentDto> searchSimilarByName(String name);
+    List<StudentDto> searchSimilarByName(String name, String sortColumn, String sortDirection);
     List<StudentDto> searchByScore(int minScore, int maxScore);
     List<StudentDto> searchAll();
+    List<StudentDto> searchAll(String sortColumn, String sortDirection);
 }

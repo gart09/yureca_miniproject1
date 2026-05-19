@@ -52,9 +52,29 @@ public class InstructorServiceImp implements  InstructorService {
     }
 
     @Override
+    public List<InstructorDto> searchSimilarByName(String name, String sortColumn, String sortDirection) {
+        try {
+            return dao.searchSimilarByName(name, sortColumn, sortDirection);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
+        }
+    }
+
+    @Override
     public List<InstructorDto> searchAll() {
         try {
             return dao.searchAll();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
+        }
+    }
+
+    @Override
+    public List<InstructorDto> searchAll(String sortColumn, String sortDirection) {
+        try {
+            return dao.searchAll(sortColumn, sortDirection);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
