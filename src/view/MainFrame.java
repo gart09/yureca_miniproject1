@@ -14,7 +14,11 @@ import model.service.StudentServiceImp;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,6 +29,11 @@ public class MainFrame extends JFrame {
     private StudentService studentService;
     private InstructorService instructorService;
     private JTabbedPane tabbedPane;
+    private TableCellRenderer defaultHeaderRenderer;
+    private boolean behaviorHeaderSortingEnabled;
+    private String behaviorSortColumn;
+    private String behaviorSortDirection;
+    private final String[] behaviorSortColumns = {"behavior_id", "name", "score"};
 
     public MainFrame() {
         setTitle("Yureca Miniproject 1 - Main");
@@ -42,6 +51,8 @@ public class MainFrame extends JFrame {
         String[] defaultColumnNames = {"결과 목록"};
         Object[][] defaultData = {{"조회/등록 버튼을 클릭하세요."}};
         resultTable = new JTable(new DefaultTableModel(defaultData, defaultColumnNames));
+        defaultHeaderRenderer = resultTable.getTableHeader().getDefaultRenderer();
+        installResultTableHeaderClickHandler();
         scrollPane = new JScrollPane(resultTable);
         scrollPane.setPreferredSize(new Dimension(350, 400));
         rightPanel.add(scrollPane, BorderLayout.CENTER);
@@ -129,6 +140,75 @@ public class MainFrame extends JFrame {
         // ... (unchanged)
     }
 
+    private void installResultTableHeaderClickHandler() {
+        resultTable.getTableHeader().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                handleResultTableHeaderClick(e);
+            }
+        });
+    }
+
+    private void handleResultTableHeaderClick(MouseEvent e) {
+        if (!isBehaviorResultTable()) {
+            return;
+        }
+
+        int viewColumn = resultTable.columnAtPoint(e.getPoint());
+        if (viewColumn < 0) {
+            return;
+        }
+
+        int modelColumn = resultTable.convertColumnIndexToModel(viewColumn);
+        if (modelColumn < 0 || modelColumn >= behaviorSortColumns.length) {
+            return;
+        }
+
+        String clickedColumn = behaviorSortColumns[modelColumn];
+        if (!clickedColumn.equals(behaviorSortColumn)) {
+            behaviorSortColumn = clickedColumn;
+            behaviorSortDirection = "ASC";
+        } else if ("ASC".equals(behaviorSortDirection)) {
+            behaviorSortDirection = "DESC";
+        } else {
+            behaviorSortColumn = null;
+            behaviorSortDirection = null;
+        }
+
+        try {
+            if (behaviorSortColumn == null) {
+                updateBehaviorTable(behaviorService.searchAll(), false);
+            } else {
+                updateBehaviorTable(behaviorService.searchAll(behaviorSortColumn, behaviorSortDirection), false);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "정렬 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private boolean isBehaviorResultTable() {
+        int selectedTabIndex = tabbedPane.getSelectedIndex();
+        return selectedTabIndex >= 0
+                && behaviorHeaderSortingEnabled
+                && "행동".equals(tabbedPane.getTitleAt(selectedTabIndex))
+                && resultTable.getColumnCount() == behaviorSortColumns.length;
+    }
+
+    private void setBehaviorHeaderSortingEnabled(boolean enabled) {
+        JTableHeader header = resultTable.getTableHeader();
+        behaviorHeaderSortingEnabled = enabled;
+        if (enabled) {
+            header.setDefaultRenderer(new BehaviorHeaderRenderer(defaultHeaderRenderer));
+            header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        } else {
+            header.setDefaultRenderer(defaultHeaderRenderer);
+            header.setCursor(Cursor.getDefaultCursor());
+            behaviorSortColumn = null;
+            behaviorSortDirection = null;
+        }
+        header.repaint();
+    }
+
     private void handleModify() {
         int selectedRow = resultTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -160,6 +240,7 @@ public class MainFrame extends JFrame {
 
     // --- Table Update Methods ---
     private void updateStudentTable(List<StudentDto> students) {
+        setBehaviorHeaderSortingEnabled(false);
         String[] columnNames = {"ID", "이름", "나이", "점수"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         for (StudentDto dto : students) {
@@ -169,6 +250,7 @@ public class MainFrame extends JFrame {
     }
 
     private void updateInstructorTable(List<InstructorDto> instructors) {
+        setBehaviorHeaderSortingEnabled(false);
         String[] columnNames = {"ID", "이름", "나이"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         for (InstructorDto dto : instructors) {
@@ -178,6 +260,15 @@ public class MainFrame extends JFrame {
     }
 
     private void updateBehaviorTable(List<BehaviorDto> behaviors) {
+        updateBehaviorTable(behaviors, true);
+    }
+
+    private void updateBehaviorTable(List<BehaviorDto> behaviors, boolean resetSort) {
+        if (resetSort) {
+            behaviorSortColumn = null;
+            behaviorSortDirection = null;
+        }
+
         String[] columnNames = {"ID", "이름", "점수"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         for (BehaviorDto dto : behaviors) {
@@ -194,6 +285,103 @@ public class MainFrame extends JFrame {
 
             // 필요하다면 최소/최대 너비도 제한할 수 있습니다.
             // nameColumn.setMinWidth(150);
+        }
+
+        setBehaviorHeaderSortingEnabled(true);
+    }
+
+    private SortState getBehaviorSortState(int modelColumn) {
+        if (behaviorSortColumn == null || modelColumn < 0 || modelColumn >= behaviorSortColumns.length) {
+            return SortState.NONE;
+        }
+
+        if (!behaviorSortColumns[modelColumn].equals(behaviorSortColumn)) {
+            return SortState.NONE;
+        }
+
+        return "DESC".equals(behaviorSortDirection) ? SortState.DESC : SortState.ASC;
+    }
+
+    private enum SortState {
+        NONE, ASC, DESC
+    }
+
+    private class BehaviorHeaderRenderer extends JPanel implements TableCellRenderer {
+        private final TableCellRenderer delegate;
+        private final JLabel textLabel = new JLabel();
+        private final SortIcon sortIcon = new SortIcon();
+
+        BehaviorHeaderRenderer(TableCellRenderer delegate) {
+            this.delegate = delegate;
+            setLayout(new FlowLayout(FlowLayout.CENTER, 4, 0));
+            setOpaque(true);
+            add(textLabel);
+            add(new JLabel(sortIcon));
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component component = delegate.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setFont(component.getFont());
+            setForeground(component.getForeground());
+            setBackground(component.getBackground());
+
+            if (component instanceof JComponent) {
+                setBorder(((JComponent) component).getBorder());
+            }
+
+            textLabel.setFont(component.getFont());
+            textLabel.setForeground(component.getForeground());
+            textLabel.setText(value == null ? "" : value.toString());
+            sortIcon.setState(getBehaviorSortState(table.convertColumnIndexToModel(column)));
+
+            return this;
+        }
+    }
+
+    private static class SortIcon implements Icon {
+        private static final int WIDTH = 9;
+        private static final int HEIGHT = 15;
+        private SortState state = SortState.NONE;
+
+        void setState(SortState state) {
+            this.state = state;
+        }
+
+        @Override
+        public int getIconWidth() {
+            return WIDTH;
+        }
+
+        @Override
+        public int getIconHeight() {
+            return HEIGHT;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            Color active = new Color(60, 60, 60);
+            Color inactive = new Color(170, 170, 170);
+
+            g2.setColor(state == SortState.ASC ? active : inactive);
+            int centerX = x + WIDTH / 2;
+            int upTop = y + 2;
+            g2.fillPolygon(
+                    new int[]{centerX, x + 1, x + WIDTH - 2},
+                    new int[]{upTop, upTop + 5, upTop + 5},
+                    3
+            );
+
+            g2.setColor(state == SortState.DESC ? active : inactive);
+            int downTop = y + 9;
+            g2.fillPolygon(
+                    new int[]{x + 1, x + WIDTH - 2, centerX},
+                    new int[]{downTop, downTop, downTop + 5},
+                    3
+            );
+
+            g2.dispose();
         }
     }
 

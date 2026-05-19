@@ -183,4 +183,48 @@ public class BehaviorDaoImp implements BehaviorDao {
 
         return result;
     }
+    
+    /**
+     * 오버로딩
+	 * 정렬 기준(sortColumn)과 오름/내림차순(sortDirection)을 파라미터로
+     * @param sortColumn
+     * @param sortDirection
+     */
+    public List<BehaviorDto> searchAll(String sortColumn, String sortDirection) throws SQLException {
+        Connection con = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<BehaviorDto> result = new ArrayList<>();
+
+        // 🚨 1. SQL 인젝션 방어 (화이트리스트 검증)
+        // 허용된 컬럼명이 아니면 기본값인 'student_id'로 강제 고정합니다.
+        String safeColumn = "behavior_id"; 
+        if ("name".equals(sortColumn) || "age".equals(sortColumn) || "score".equals(sortColumn)) {
+            safeColumn = sortColumn;
+        }
+
+        // 방향도 ASC, DESC 둘 중 하나만 허용합니다.
+        String safeDirection = "DESC".equalsIgnoreCase(sortDirection) ? "DESC" : "ASC";
+
+        // 💡 2. 동적 쿼리 조립 (컬럼명은 ? 대신 문자열 결합을 사용)
+        String sql = "SELECT * FROM behavior ORDER BY " + safeColumn + " " + safeDirection;
+
+        try {
+            con = dbutil.getConnection();
+            stmt = con.prepareStatement(sql);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+            	BehaviorDto dto = new BehaviorDto();
+                dto.setBehaviorId(rs.getInt("behavior_id"));
+                dto.setName(rs.getString("name"));
+                dto.setScore(rs.getInt("score"));
+                result.add(dto);
+            }
+        } finally {
+            dbutil.close(rs, stmt, con);
+        }
+
+        return result;
+    }
 }

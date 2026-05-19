@@ -11,4 +11,5 @@ public interface BehaviorService {
     List<BehaviorDto> searchSimilarByName(String name);
     List<BehaviorDto> searchByScore(int minScore, int maxScore);
     List<BehaviorDto> searchAll();
+    List<BehaviorDto> searchAll(String sortColumn, String sortDirection);
 }
