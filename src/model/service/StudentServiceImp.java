@@ -1,27 +1,20 @@
 package model.service;
 
-import model.dao.BehaviorDao;
-import model.dao.BehaviorDaoImp;
-import model.dto.BehaviorDto;
-import model.dto.CanNotFindException;
-import model.dto.DuplicateBehaviorException;
+import model.dao.StudentDao;
+import model.dao.StudentDaoImp;
+import model.dto.StudentDto;
 
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 
-public class BehaviorServiceImp implements  BehaviorService {
-    private BehaviorDao dao = new BehaviorDaoImp();
+public class StudentServiceImp implements  StudentService {
+    private StudentDao dao = new StudentDaoImp();
 
     @Override
-    public void add(BehaviorDto behaviorDto) {
+    public void add(StudentDto studentDto) {
         try {
-            String name = behaviorDto.getName();
-            BehaviorDto find = dao.searchOneByName(name);
-            if (find != null) {
-                throw new DuplicateBehaviorException(name);
-            }
-            dao.add(behaviorDto);
+            String name = studentDto.getName();
+            dao.add(studentDto);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("데이터베이스 등록 중 시스템 오류가 발생했습니다.", e);
@@ -29,12 +22,9 @@ public class BehaviorServiceImp implements  BehaviorService {
     }
 
     @Override
-    public void update(BehaviorDto behaviorDto) {
+    public void update(StudentDto studentDto) {
         try {
-            BehaviorDto find = dao.searchOneByName(behaviorDto.getName());
-            if(find != null && find.getBehaviorId() != behaviorDto.getBehaviorId())
-                throw new DuplicateBehaviorException(behaviorDto.getName());
-            dao.update(behaviorDto);
+            dao.update(studentDto);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("데이터베이스 수정 중 시스템 오류가 발생했습니다.", e);
@@ -52,7 +42,7 @@ public class BehaviorServiceImp implements  BehaviorService {
     }
 
     @Override
-    public List<BehaviorDto> searchSimilarByName(String name) {
+    public List<StudentDto> searchSimilarByName(String name) {
         try {
             return dao.searchSimilarByName(name);
         } catch (SQLException e) {
@@ -62,7 +52,7 @@ public class BehaviorServiceImp implements  BehaviorService {
     }
 
     @Override
-    public List<BehaviorDto> searchByScore(int minScore, int maxScore) {
+    public List<StudentDto> searchByScore(int minScore, int maxScore) {
         try {
             return dao.searchByScore(minScore, maxScore);
         } catch (SQLException e) {
@@ -72,7 +62,7 @@ public class BehaviorServiceImp implements  BehaviorService {
     }
 
     @Override
-    public List<BehaviorDto> searchAll() {
+    public List<StudentDto> searchAll() {
         try {
             return dao.searchAll();
         } catch (SQLException e) {

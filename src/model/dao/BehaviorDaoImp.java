@@ -55,7 +55,7 @@ public class BehaviorDaoImp implements BehaviorDao {
     }
 
     @Override
-    public void remove(BehaviorDto behaveDto) throws SQLException {
+    public void remove(int id) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
         String sql = "DELETE FROM behavior WHERE behavior_id = ?";
@@ -63,7 +63,7 @@ public class BehaviorDaoImp implements BehaviorDao {
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
-            stmt.setInt(1, behaveDto.getBehaviorId());
+            stmt.setInt(1, id);
             stmt.executeUpdate();
 
         } finally {
@@ -169,7 +169,7 @@ public class BehaviorDaoImp implements BehaviorDao {
             stmt = con.prepareStatement(sql);
 
             rs = stmt.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 BehaviorDto behaviorDto = new BehaviorDto();
                 behaviorDto.setBehaviorId(rs.getInt("behavior_id"));
                 behaviorDto.setName(rs.getString("name"));

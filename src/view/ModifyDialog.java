@@ -1,16 +1,21 @@
 package view;
 
 import model.dto.BehaviorDto;
+import model.dto.InstructorDto;
+import model.dto.StudentDto;
 import model.service.BehaviorService;
+import model.service.InstructorService;
+import model.service.StudentService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 public class ModifyDialog extends JDialog {
-    private boolean isModified = false; // 수정을 통해 실제 변경이 일어났는지 여부를 부모 창에 알리기 위한 플래그
+    private boolean isModified = false;
 
-    public ModifyDialog(JFrame parent, String type, JTable resultTable, int selectedRow, BehaviorService behaviorService) {
+    public ModifyDialog(JFrame parent, String type, JTable resultTable, int selectedRow, 
+                        StudentService studentService, InstructorService instructorService, BehaviorService behaviorService) {
         super(parent, type + " 수정", true);
         setSize(300, 250);
         setLayout(new BorderLayout());
@@ -66,7 +71,8 @@ public class ModifyDialog extends JDialog {
         JButton btnConfirm = new JButton("확인");
         JButton btnCancel = new JButton("취소");
 
-        final JTextField finalScoreField = scoreField; // 람다 내부에서 사용하기 위해 final (effectively final)
+        final JTextField finalAgeField = ageField;
+        final JTextField finalScoreField = scoreField;
 
         btnConfirm.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(
@@ -81,18 +87,26 @@ public class ModifyDialog extends JDialog {
                     int id = Integer.parseInt(idField.getText());
                     String name = nameField.getText();
 
-                    if (type.equals("행동") && behaviorService != null) {
+                    if (type.equals("학생") && studentService != null) {
+                        int age = Integer.parseInt(finalAgeField.getText());
                         int score = Integer.parseInt(finalScoreField.getText());
-                        BehaviorDto updatedDto = new BehaviorDto(id, name, score);
-                        
-                        behaviorService.update(updatedDto);
+                        studentService.update(new StudentDto(id, name, age, score));
                         isModified = true;
+                    } else if (type.equals("강사") && instructorService != null) {
+                        int age = Integer.parseInt(finalAgeField.getText());
+                        instructorService.update(new InstructorDto(id, name, age));
+                        isModified = true;
+                    } else if (type.equals("행동") && behaviorService != null) {
+                        int score = Integer.parseInt(finalScoreField.getText());
+                        behaviorService.update(new BehaviorDto(id, name, score));
+                        isModified = true;
+                    }
+                    
+                    if (isModified) {
                         JOptionPane.showMessageDialog(this, "수정되었습니다.");
                         dispose();
                     } else {
-                        // 학생, 강사의 수정 로직은 추후 추가
-                        JOptionPane.showMessageDialog(this, "해당 타입의 수정 기능은 준비중입니다.");
-                        dispose();
+                        JOptionPane.showMessageDialog(this, "서비스가 초기화되지 않았습니다.");
                     }
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this, "점수나 나이는 올바른 숫자 형식이어야 합니다.", "입력 오류", JOptionPane.ERROR_MESSAGE);

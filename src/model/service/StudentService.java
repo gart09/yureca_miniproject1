@@ -1,0 +1,14 @@
+package model.service;
+
+import model.dto.StudentDto;
+
+import java.util.List;
+
+public interface StudentService {
+    void add(StudentDto studentDto);
+    void update(StudentDto studentDto);
+    void remove(int id);
+    List<StudentDto> searchSimilarByName(String name);
+    List<StudentDto> searchByScore(int minScore, int maxScore);
+    List<StudentDto> searchAll();
+}
