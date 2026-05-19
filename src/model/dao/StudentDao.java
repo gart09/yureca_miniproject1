@@ -13,6 +13,9 @@ public interface StudentDao {
     List<StudentDto> searchSimilarByName(String name) throws SQLException;
     List<StudentDto> searchSimilarByName(String name, String sortColumn, String sortDirection) throws SQLException;
     List<StudentDto> searchByScore(int minScore, int maxScore) throws SQLException;
+    List<StudentDto> searchTopPercent(int percent) throws SQLException;
     List<StudentDto> searchAll() throws SQLException;
     List<StudentDto> searchAll(String sortColumn, String sortDirection) throws SQLException;
 }
+
+  

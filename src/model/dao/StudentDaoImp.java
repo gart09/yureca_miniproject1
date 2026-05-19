@@ -237,4 +237,10 @@ public class StudentDaoImp implements StudentDao {
     private String getSortDirection(String sortDirection) {
         return "DESC".equalsIgnoreCase(sortDirection) ? "DESC" : "ASC";
     }
+
+	@Override
+	public List<StudentDto> searchTopPercent(int percent) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
