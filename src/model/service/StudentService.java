@@ -1,4 +1,4 @@
-package service;
+package model.service;
 
 public class StudentService
 {
