@@ -1,0 +1,9 @@
+# 컴파일된 기계어 파일 무시
+out/
+bin/
+*.class
+
+# IDE 설정 파일 무시
+.idea/
+*.iml
+.metadata/
