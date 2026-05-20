@@ -20,7 +20,7 @@ public class EvaluationServiceImp implements EvaluationService {
         try {
             LocalDateTime now = LocalDateTime.now();
             int studentScore = studentDao.searchById(studentId).getScore();
-            EvaluationDto evaluationDto = new EvaluationDto(instructorId, studentId, behaviorId, studentScore, now);
+            EvaluationDto evaluationDto = new EvaluationDto(studentId, instructorId, behaviorId, studentScore, now);
             dao.add(evaluationDto);
 
             StudentDto studentDto = studentDao.searchById(studentId);
