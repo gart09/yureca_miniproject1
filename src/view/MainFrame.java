@@ -1,10 +1,6 @@
 package view;
 
-import model.dto.BehaviorDto;
-import model.dto.CanNotFindException;
-import model.dto.DuplicateBehaviorException;
-import model.dto.InstructorDto;
-import model.dto.StudentDto;
+import model.dto.*;
 import model.service.BehaviorService;
 import model.service.BehaviorServiceImp;
 import model.service.InstructorService;
@@ -485,6 +481,39 @@ public class MainFrame extends JFrame {
         }
 
         setBehaviorHeaderSortingEnabled(true);
+    }
+
+    private void updateEvaluationTable(List<EvaluationDetailDto> evaluations) {
+        // 평가 이력 테이블: 번호, 강사이름, 학생이름, 학생점수(평가후), 행동안건, 부여점수, 시기
+        String[] columnNames = {"이력ID", "강사", "학생", "학생점수", "행동", "부여점수", "일시"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+        // LocalDateTime을 보기 좋게 출력하기 위한 포매터 설정
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        for (EvaluationDetailDto dto : evaluations) {
+            // 날짜 포맷 적용 (null 안전성 확보)
+            String dateStr = "";
+            // IDE 자동 생성 getter 이름이 getEvaluated_at()인지 getEvaluatedAt()인지 확인 후 맞춰주세요.
+            if (dto.getEvaluatedAt() != null) {
+                dateStr = dto.getEvaluatedAt().format(formatter);
+            }
+
+            // DTO에 이미 모든 데이터가 담겨 있으므로 바로 JTable 모델에 추가합니다.
+            model.addRow(new Object[]{
+                    dto.getEvaluationId(),
+                    dto.getInstructorName(),
+                    dto.getStudentName(),
+                    dto.getStudentScore(),
+                    dto.getBehaviorName(),
+                    dto.getBehaviorScore(),
+                    dateStr
+            });
+        }
+
+        resultTable.setModel(model);
+        currentResultType = "평가이력";
+        setBehaviorHeaderSortingEnabled(false); // 평가 이력은 헤더 정렬 비활성화
     }
 
     private SortState getBehaviorSortState(int modelColumn) {

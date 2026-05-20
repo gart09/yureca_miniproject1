@@ -3,20 +3,33 @@ package model.dto;
 import java.time.LocalDateTime;
 
 public class EvaluationDetailDto {
+    int             evaluationId;
     String          instructorName;
     String          studentName;
     int             studentScore;
     String          behaviorName;
     int             behaviorScore;
-    LocalDateTime   evaluated_at;
+    LocalDateTime   evaluatedAt;
 
-    public EvaluationDetailDto(String instructorName, String studentName, int studentScore, String behaviorName, int behaviorScore, LocalDateTime evaluated_at) {
+    public EvaluationDetailDto() {}
+
+
+    public EvaluationDetailDto(int evaluationId, String instructorName, String studentName, int studentScore, String behaviorName, int behaviorScore, LocalDateTime evaluatedAt) {
+        this.evaluationId = evaluationId;
         this.instructorName = instructorName;
         this.studentName = studentName;
         this.studentScore = studentScore;
         this.behaviorName = behaviorName;
         this.behaviorScore = behaviorScore;
-        this.evaluated_at = evaluated_at;
+        this.evaluatedAt = evaluatedAt;
+    }
+
+    public int getEvaluationId() {
+        return evaluationId;
+    }
+
+    public void setEvaluationId(int evaluationId) {
+        this.evaluationId = evaluationId;
     }
 
     public String getInstructorName() {
@@ -59,11 +72,11 @@ public class EvaluationDetailDto {
         this.behaviorScore = behaviorScore;
     }
 
-    public LocalDateTime getEvaluated_at() {
-        return evaluated_at;
+    public LocalDateTime getEvaluatedAt() {
+        return evaluatedAt;
     }
 
-    public void setEvaluated_at(LocalDateTime evaluated_at) {
-        this.evaluated_at = evaluated_at;
+    public void setEvaluatedAt(LocalDateTime evaluated_at) {
+        this.evaluatedAt = evaluatedAt;
     }
 }
