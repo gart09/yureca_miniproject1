@@ -100,7 +100,6 @@ public class StudentServiceImp implements  StudentService {
             throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
         }
 	}
-
     
     
 }

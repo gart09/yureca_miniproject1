@@ -36,6 +36,7 @@ public class MainFrame extends JFrame {
     private String behaviorSortDirection;
     private BehaviorSearchMode studentSearchMode = BehaviorSearchMode.ALL;
     private String studentNameKeyword = "";
+    private int studentTopPercent = 10;
     private BehaviorSearchMode instructorSearchMode = BehaviorSearchMode.ALL;
     private String instructorNameKeyword = "";
     private BehaviorSearchMode behaviorSearchMode = BehaviorSearchMode.ALL;
@@ -70,16 +71,12 @@ public class MainFrame extends JFrame {
 
         // Buttons at the bottom of the result list
         JPanel rightBottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        
-        JButton btnSort = new JButton("정렬");
         JButton btnModify = new JButton("수정");
         JButton btnDeleteSelected = new JButton("선택 항목 삭제");
-        
-        btnSort.addActionListener(e -> handleSort());
+
         btnModify.addActionListener(e -> handleModify());
         btnDeleteSelected.addActionListener(e -> handleDelete());
 
-        rightBottomPanel.add(btnSort);
         rightBottomPanel.add(btnModify);
         rightBottomPanel.add(btnDeleteSelected);
         rightPanel.add(rightBottomPanel, BorderLayout.SOUTH);
@@ -251,6 +248,7 @@ public class MainFrame extends JFrame {
             behaviorSortDirection = null;
             studentSearchMode = BehaviorSearchMode.ALL;
             studentNameKeyword = "";
+            studentTopPercent = 10;
             instructorSearchMode = BehaviorSearchMode.ALL;
             instructorNameKeyword = "";
             behaviorSearchMode = BehaviorSearchMode.ALL;
@@ -271,10 +269,38 @@ public class MainFrame extends JFrame {
             return studentService.searchSimilarByName(studentNameKeyword);
         }
 
+        if (studentSearchMode == BehaviorSearchMode.TOP_PERCENT) {
+            List<StudentDto> students = studentService.searchTopPercent(studentTopPercent);
+            if (sorted) {
+                sortStudentResults(students);
+            }
+            return students;
+        }
+
         if (sorted) {
             return studentService.searchAll(behaviorSortColumn, behaviorSortDirection);
         }
         return studentService.searchAll();
+    }
+
+    private void sortStudentResults(List<StudentDto> students) {
+        java.util.Comparator<StudentDto> comparator;
+
+        if ("name".equals(behaviorSortColumn)) {
+            comparator = java.util.Comparator.comparing(StudentDto::getName);
+        } else if ("age".equals(behaviorSortColumn)) {
+            comparator = java.util.Comparator.comparingInt(StudentDto::getAge);
+        } else if ("score".equals(behaviorSortColumn)) {
+            comparator = java.util.Comparator.comparingInt(StudentDto::getScore);
+        } else {
+            comparator = java.util.Comparator.comparingInt(StudentDto::getStudentId);
+        }
+
+        if ("DESC".equals(behaviorSortDirection)) {
+            comparator = comparator.reversed();
+        }
+
+        Collections.sort(students, comparator);
     }
 
     private List<InstructorDto> searchInstructorByCurrentMode() {
@@ -345,11 +371,19 @@ public class MainFrame extends JFrame {
     private void setStudentAllMode() {
         studentSearchMode = BehaviorSearchMode.ALL;
         studentNameKeyword = "";
+        studentTopPercent = 10;
     }
 
     private void setStudentNameMode(String keyword) {
         studentSearchMode = BehaviorSearchMode.NAME;
         studentNameKeyword = keyword;
+        studentTopPercent = 10;
+    }
+
+    private void setStudentTopPercentMode(int percent) {
+        studentSearchMode = BehaviorSearchMode.TOP_PERCENT;
+        studentNameKeyword = "";
+        studentTopPercent = percent;
     }
 
     private void setInstructorAllMode() {
@@ -427,6 +461,15 @@ public class MainFrame extends JFrame {
 
         String[] columnNames = {"ID", "이름", "나이", "점수"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+        if (students == null || students.isEmpty()) {
+            resultTable.setModel(model);
+            currentResultType = "학생";
+            setBehaviorHeaderSortingEnabled(true);
+            JOptionPane.showMessageDialog(this, "조회된 학생이 없습니다.", "안내", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         for (StudentDto dto : students) {
             model.addRow(new Object[]{dto.getStudentId(), dto.getName(), dto.getAge(), dto.getScore()});
         }
@@ -509,7 +552,7 @@ public class MainFrame extends JFrame {
     }
 
     private enum BehaviorSearchMode {
-        ALL, NAME, SCORE
+        ALL, NAME, SCORE, TOP_PERCENT
     }
 
     private class BehaviorHeaderRenderer extends JPanel implements TableCellRenderer {
@@ -619,6 +662,15 @@ public class MainFrame extends JFrame {
         JButton btnSearchAll = new JButton("전체 조회");
         gbcSearch.gridx = 0; gbcSearch.gridy = 3; gbcSearch.gridwidth = 2;
         searchPanel.add(btnSearchAll, gbcSearch);
+
+        JPanel topPercentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        JComboBox<Integer> topPercentCombo = new JComboBox<>(new Integer[]{5, 10, 20, 30, 50});
+        JButton btnSearchTopPercent = new JButton("상위 조회");
+        topPercentPanel.add(topPercentCombo);
+        topPercentPanel.add(new JLabel("%"));
+        topPercentPanel.add(btnSearchTopPercent);
+        gbcSearch.gridx = 0; gbcSearch.gridy = 4; gbcSearch.gridwidth = 2;
+        searchPanel.add(topPercentPanel, gbcSearch);
         
         btnSearch.addActionListener(e -> {
             try {
@@ -641,6 +693,16 @@ public class MainFrame extends JFrame {
                 updateStudentTable(studentService.searchAll());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnSearchTopPercent.addActionListener(e -> {
+            try {
+                int percent = (Integer) topPercentCombo.getSelectedItem();
+                setStudentTopPercentMode(percent);
+                updateStudentTable(studentService.searchTopPercent(percent));
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "상위 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             }
         });
         
