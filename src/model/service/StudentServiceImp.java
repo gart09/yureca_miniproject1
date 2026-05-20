@@ -100,6 +100,26 @@ public class StudentServiceImp implements  StudentService {
             throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
         }
 	}
+
+	@Override
+	public List<StudentDto> searchRecentRewardedStudents() {
+		try {
+            return dao.searchRecentHistory(true); // true 면 부등호가 behavior.score > 0
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
+        }
+	}
+
+	@Override
+	public List<StudentDto> searchRecentPenalizedStudents() {
+		try {
+            return dao.searchRecentHistory(false); // false 면 부등호가 behavior.score < 0
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
+        }
+	}
     
     
 }
