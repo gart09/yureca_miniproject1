@@ -89,6 +89,7 @@ public class InstructorDaoImp implements InstructorDao {
             if(rs.next()) {
                 result.setInstructorId(rs.getInt("instructor_id"));
                 result.setName(rs.getString("name"));
+                result.setAge(rs.getInt("age"));
             }else{
                 return null;
             }
@@ -104,7 +105,7 @@ public class InstructorDaoImp implements InstructorDao {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         List<InstructorDto> result = new ArrayList<>();
-        String sql = " SELECT * FROM instructor WHERE name = ?";
+        String sql = " SELECT * FROM instructor WHERE name LIKE ?";
 
         try {
             con = dbutil.getConnection();
@@ -135,7 +136,7 @@ public class InstructorDaoImp implements InstructorDao {
         List<InstructorDto> result = new ArrayList<>();
         String safeColumn = getSortableColumn(sortColumn);
         String safeDirection = getSortDirection(sortDirection);
-        String sql = "SELECT * FROM instructor WHERE name = ? ORDER BY "
+        String sql = "SELECT * FROM instructor WHERE name LIKE ? ORDER BY "
                 + safeColumn + " " + safeDirection + ", instructor_id ASC";
 
         try {

@@ -108,7 +108,7 @@ public class StudentDaoImp implements StudentDao {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         List<StudentDto> result = new ArrayList<>();
-        String sql = " SELECT * FROM student WHERE name = ?";
+        String sql = " SELECT * FROM student WHERE name LIKE ?";
 
         try {
             con = dbutil.getConnection();
@@ -140,7 +140,7 @@ public class StudentDaoImp implements StudentDao {
         List<StudentDto> result = new ArrayList<>();
         String safeColumn = getSortableColumn(sortColumn);
         String safeDirection = getSortDirection(sortDirection);
-        String sql = "SELECT * FROM student WHERE name = ? ORDER BY "
+        String sql = "SELECT * FROM student WHERE name LIKE ? ORDER BY "
                 + safeColumn + " " + safeDirection + ", student_id ASC";
 
         try {

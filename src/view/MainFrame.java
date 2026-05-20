@@ -3,6 +3,8 @@ package view;
 import model.dto.*;
 import model.service.BehaviorService;
 import model.service.BehaviorServiceImp;
+import model.service.EvaluationService;
+import model.service.EvaluationServiceImp;
 import model.service.InstructorService;
 import model.service.InstructorServiceImp;
 import model.service.StudentService;
@@ -24,6 +26,7 @@ public class MainFrame extends JFrame {
     private BehaviorService behaviorService;
     private StudentService studentService;
     private InstructorService instructorService;
+    private EvaluationService evaluationService;
     private JTabbedPane tabbedPane;
     private TableCellRenderer defaultHeaderRenderer;
     private boolean behaviorHeaderSortingEnabled;
@@ -52,6 +55,7 @@ public class MainFrame extends JFrame {
         behaviorService = new BehaviorServiceImp();
         studentService = new StudentServiceImp();
         instructorService = new InstructorServiceImp();
+        evaluationService = new EvaluationServiceImp();
 
         // Right half: Result List and Action Buttons
         JPanel rightPanel = new JPanel(new BorderLayout());
@@ -101,7 +105,7 @@ public class MainFrame extends JFrame {
         rewardPanel.setBorder(BorderFactory.createTitledBorder("상벌점"));
         
         JButton btnRewardPenalty = new JButton("상벌점 부여");
-        btnRewardPenalty.addActionListener(e -> new RewardPenaltyFrame(behaviorService).setVisible(true));
+        btnRewardPenalty.addActionListener(e -> new RewardPenaltyFrame(studentService, instructorService, behaviorService, evaluationService).setVisible(true));
         rewardPanel.add(btnRewardPenalty);
         bottomPanel.add(rewardPanel, BorderLayout.CENTER);
 
