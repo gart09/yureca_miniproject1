@@ -1,6 +1,7 @@
 package model.service;
 
 import model.dto.BehaviorDto;
+import model.dto.EvaluationDetailDto;
 import model.dto.InstructorDto;
 
 import java.util.List;
