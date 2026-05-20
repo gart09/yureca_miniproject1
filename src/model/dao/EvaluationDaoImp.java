@@ -21,15 +21,19 @@ public class EvaluationDaoImp implements EvaluationDao {
         Connection con = null;
         PreparedStatement stmt = null;
 
-        String sql = " INSERT INTO evaluation (student_id, instructor_id, behavior_id, evaluated_at) VALUES (?, ?, ?, ?)";
+        String sql = " INSERT INTO evaluation (student_id, instructor_id, behavior_id, student_score, evaluated_at) VALUES (?, ?, ?, ?, ?)";
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
+
             int idx = 1;
+
             stmt.setInt(idx++, evaluationDto.getStudentId());
             stmt.setInt(idx++, evaluationDto.getInstructorId());
             stmt.setInt(idx++, evaluationDto.getBehaviorId());
+            stmt.setInt(idx++, evaluationDto.getStudentScore());
             stmt.setObject(idx++, evaluationDto.getEvaluatedAt());
+
 
             stmt.executeUpdate();
         } finally {
@@ -60,22 +64,36 @@ public class EvaluationDaoImp implements EvaluationDao {
         PreparedStatement stmt = null;
         List<EvaluationDetailDto> result = new ArrayList<>();
 
-        String sql =" SELECT instructor_name, student_name, student_score, behavior_name, behavior_score, evaluated_at"
-                +   "";
+        String sql =
+                " SELECT " +
+                "e.evaluation_id as evaluation_id, " +
+                "i.name as instructor_name, " +
+                "s.name as student_name, " +
+                "e.student_score as student_score, " +
+                "b.name as behavior_name, " +
+                "b.score as behavior_score, " +
+                "e.evaluated_at " +
+                "FROM evaluation e " +
+                "JOIN instructor i ON e.instructor_id = i.instructor_id " +
+                "JOIN student s ON e.student_id = s.student_id " +
+                "JOIN behavior b ON e.behavior_id = b.behavior_id";
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
             ResultSet rs = null;
             rs = stmt.executeQuery();
             while(rs.next()){
-                EvaluationDto EvaluationDto = new EvaluationDto();
-                EvaluationDto.setEvaluationId(rs.getInt("evaluation_id"));
-                EvaluationDto.setInstructorId(rs.getInt("instructor_id"));
-                EvaluationDto.setStudentId(rs.getInt("student_id"));
-                EvaluationDto.setBehaviorId(rs.getInt("behavior_id"));
-                EvaluationDto.setEvaluatedAt(rs.getObject("evaluated_at", LocalDateTime.class));
+                EvaluationDetailDto evaluationDetailDto = new EvaluationDetailDto();
+                evaluationDetailDto.setEvaluationId(rs.getInt("evaluation_id"));
+                evaluationDetailDto.setInstructorName(rs.getString("instructor_name"));
+                evaluationDetailDto.setStudentName(rs.getString("student_name"));
+                evaluationDetailDto.setStudentScore(rs.getInt("student_score"));
+                evaluationDetailDto.setBehaviorName(rs.getString("behavior_name"));
+                evaluationDetailDto.setBehaviorScore(rs.getInt("behavior_score"));
+                evaluationDetailDto.setInstructorName(rs.getString("instructor_name"));
+                evaluationDetailDto.setEvaluatedAt(rs.getObject("evaluated_at", LocalDateTime.class));
 
-                result.add(EvaluationDto);
+                result.add(evaluationDetailDto);
             }
         } finally {
             dbutil.close(stmt, con);
@@ -89,7 +107,19 @@ public class EvaluationDaoImp implements EvaluationDao {
         PreparedStatement stmt = null;
         List<EvaluationDetailDto> result = new ArrayList<>();
 
-        String sql = " SELECT * FROM evaluation where student_id = ?";
+        String sql =
+                " SELECT " +
+                "e.evaluation_id as evaluation_id, " +
+                "i.name as instructor_name, " +
+                "s.name as student_name, " +
+                "e.student_score as student_score, " +
+                "b.name as behavior_name, " +
+                "b.score as behavior_score, " +
+                "e.evaluated_at " +
+                "FROM evaluation e " +
+                "JOIN instructor i ON e.instructor_id = i.instructor_id " +
+                "JOIN student s ON e.student_id = s.student_id " +
+                "JOIN behavior b ON e.behavior_id = b.behavior_id";
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
@@ -97,14 +127,17 @@ public class EvaluationDaoImp implements EvaluationDao {
             ResultSet rs = null;
             rs = stmt.executeQuery();
             while(rs.next()){
-                EvaluationDto EvaluationDto = new EvaluationDto();
-                EvaluationDto.setEvaluationId(rs.getInt("evaluation_id"));
-                EvaluationDto.setInstructorId(rs.getInt("instructor_id"));
-                EvaluationDto.setStudentId(rs.getInt("student_id"));
-                EvaluationDto.setBehaviorId(rs.getInt("behavior_id"));
-                EvaluationDto.setEvaluatedAt(rs.getObject("evaluated_at", LocalDateTime.class));
+                EvaluationDetailDto evaluationDetailDto = new EvaluationDetailDto();
+                evaluationDetailDto.setEvaluationId(rs.getInt("evaluation_id"));
+                evaluationDetailDto.setInstructorName(rs.getString("instructor_name"));
+                evaluationDetailDto.setStudentName(rs.getString("student_name"));
+                evaluationDetailDto.setStudentScore(rs.getInt("student_score"));
+                evaluationDetailDto.setBehaviorName(rs.getString("behavior_name"));
+                evaluationDetailDto.setBehaviorScore(rs.getInt("behavior_score"));
+                evaluationDetailDto.setInstructorName(rs.getString("instructor_name"));
+                evaluationDetailDto.setEvaluatedAt(rs.getObject("evaluated_at", LocalDateTime.class));
 
-                result.add(EvaluationDto);
+                result.add(evaluationDetailDto);
             }
         } finally {
             dbutil.close(stmt, con);
@@ -118,22 +151,36 @@ public class EvaluationDaoImp implements EvaluationDao {
         PreparedStatement stmt = null;
         List<EvaluationDetailDto> result = new ArrayList<>();
 
-        String sql = " SELECT * FROM evaluation where instructor_id = ?";
+        String sql =
+                " SELECT " +
+                "e.evaluation_id as evaluation_id, " +
+                "i.name as instructor_name, " +
+                "s.name as student_name, " +
+                "e.student_score as student_score, " +
+                "b.name as behavior_name, " +
+                "b.score as behavior_score, " +
+                "e.evaluated_at " +
+                "FROM evaluation e " +
+                "JOIN instructor i ON e.instructor_id = i.instructor_id " +
+                "JOIN student s ON e.student_id = s.student_id " +
+                "JOIN behavior b ON e.behavior_id = b.behavior_id";
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
-            stmt.setInt(1, instructorId);
             ResultSet rs = null;
             rs = stmt.executeQuery();
-            while(rs.next()){
-                EvaluationDto EvaluationDto = new EvaluationDto();
-                EvaluationDto.setEvaluationId(rs.getInt("evaluation_id"));
-                EvaluationDto.setInstructorId(rs.getInt("instructor_id"));
-                EvaluationDto.setStudentId(rs.getInt("student_id"));
-                EvaluationDto.setBehaviorId(rs.getInt("behavior_id"));
-                EvaluationDto.setEvaluatedAt(rs.getObject("evaluated_at", LocalDateTime.class));
+            while (rs.next()) {
+                EvaluationDetailDto evaluationDetailDto = new EvaluationDetailDto();
+                evaluationDetailDto.setEvaluationId(rs.getInt("evaluation_id"));
+                evaluationDetailDto.setInstructorName(rs.getString("instructor_name"));
+                evaluationDetailDto.setStudentName(rs.getString("student_name"));
+                evaluationDetailDto.setStudentScore(rs.getInt("student_score"));
+                evaluationDetailDto.setBehaviorName(rs.getString("behavior_name"));
+                evaluationDetailDto.setBehaviorScore(rs.getInt("behavior_score"));
+                evaluationDetailDto.setInstructorName(rs.getString("instructor_name"));
+                evaluationDetailDto.setEvaluatedAt(rs.getObject("evaluated_at", LocalDateTime.class));
 
-                result.add(EvaluationDto);
+                result.add(evaluationDetailDto);
             }
         } finally {
             dbutil.close(stmt, con);

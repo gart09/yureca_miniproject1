@@ -7,23 +7,34 @@ public class EvaluationDto {
     int studentId;
     int instructorId;
     int behaviorId;
+    int studentScore;
     LocalDateTime evaluatedAt;
 
     public EvaluationDto() {}
 
-    public EvaluationDto(int studentId, int instructorId, int behaviorId, LocalDateTime evaluatedAt) {
+    public EvaluationDto(int studentId, int instructorId, int behaviorId, int studentScore, LocalDateTime evaluatedAt) {
         this.studentId = studentId;
         this.instructorId = instructorId;
         this.behaviorId = behaviorId;
+        this.studentScore = studentScore;
         this.evaluatedAt = evaluatedAt;
     }
 
-    public EvaluationDto(int evaluationId, int studentId, int instructorId, int behaviorId, LocalDateTime evaluatedAt) {
+    public EvaluationDto(int evaluationId, int studentId, int instructorId, int behaviorId, int studentScore, LocalDateTime evaluatedAt) {
         this.evaluationId = evaluationId;
         this.studentId = studentId;
         this.instructorId = instructorId;
         this.behaviorId = behaviorId;
+        this.studentScore = studentScore;
         this.evaluatedAt = evaluatedAt;
+    }
+
+    public int getStudentScore() {
+        return studentScore;
+    }
+
+    public void setStudentScore(int studentScore) {
+        this.studentScore = studentScore;
     }
 
     public int getEvaluationId() {
