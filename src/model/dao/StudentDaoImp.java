@@ -1,6 +1,5 @@
 package model.dao;
 
-import model.dto.InstructorDto;
 import model.dto.StudentDto;
 import util.DBUtil;
 
@@ -75,28 +74,6 @@ public class StudentDaoImp implements StudentDao {
     }
 
     @Override
-    public StudentDto searchById(int id) throws SQLException {
-        Connection con = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        StudentDto result = new StudentDto();
-        String sql = "SELECT * FROM student WHERE student_id = ?";
-
-        try {
-            con = dbutil.getConnection();
-            stmt = con.prepareStatement(sql);
-            stmt.setInt(1, id);
-
-            rs = stmt.executeQuery();
-            result.setStudentId(rs.getInt("student_id"));
-            result.setName(rs.getString("name"));
-        } finally {
-            dbutil.close(stmt, con);
-        }
-        return result;
-    }
-
-    @Override
     public List<StudentDto> searchSimilarByName(String name) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
@@ -107,7 +84,7 @@ public class StudentDaoImp implements StudentDao {
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
-            stmt.setString(1, "%" + name + "%");
+            stmt.setString(1, name);
 
             rs = stmt.executeQuery();
             while(rs.next()){
@@ -140,7 +117,7 @@ public class StudentDaoImp implements StudentDao {
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
-            stmt.setString(1, "%" + name + "%");
+            stmt.setString(1, name);
 
             rs = stmt.executeQuery();
             while(rs.next()){

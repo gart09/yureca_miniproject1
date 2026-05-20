@@ -12,7 +12,6 @@ public interface BehaviorDao {
     List<BehaviorDto> searchSimilarByName(String name) throws SQLException;
     List<BehaviorDto> searchSimilarByName(String name, String sortColumn, String sortDirection) throws SQLException;
     BehaviorDto searchOneByName(String name) throws SQLException;
-    BehaviorDto searchById(int id) throws SQLException;
     List<BehaviorDto> searchByScore(int minScore, int maxScore) throws SQLException;
     List<BehaviorDto> searchAll() throws SQLException;
     List<BehaviorDto> searchAll(String sortColumn, String sortDirection) throws SQLException;

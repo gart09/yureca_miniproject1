@@ -1,6 +1,5 @@
 package model.dao;
 
-import model.dto.BehaviorDto;
 import model.dto.InstructorDto;
 import util.DBUtil;
 
@@ -73,28 +72,6 @@ public class InstructorDaoImp implements InstructorDao {
     }
 
     @Override
-    public InstructorDto searchById(int id) throws SQLException {
-        Connection con = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        InstructorDto result = new InstructorDto();
-        String sql = "SELECT * FROM instructor WHERE instructor_id = ?";
-
-        try {
-            con = dbutil.getConnection();
-            stmt = con.prepareStatement(sql);
-            stmt.setInt(1, id);
-
-            rs = stmt.executeQuery();
-            result.setInstructorId(rs.getInt("instructor_id"));
-            result.setName(rs.getString("name"));
-        } finally {
-            dbutil.close(stmt, con);
-        }
-        return result;
-    }
-
-    @Override
     public List<InstructorDto> searchSimilarByName(String name) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
@@ -105,7 +82,7 @@ public class InstructorDaoImp implements InstructorDao {
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
-            stmt.setString(1, "%" + name + "%");
+            stmt.setString(1, name);
 
             rs = stmt.executeQuery();
             while(rs.next()){
@@ -137,7 +114,7 @@ public class InstructorDaoImp implements InstructorDao {
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
-            stmt.setString(1, "%" + name + "%");
+            stmt.setString(1, name);
 
             rs = stmt.executeQuery();
             while(rs.next()){

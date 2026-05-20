@@ -51,16 +51,6 @@ public class BehaviorServiceImp implements  BehaviorService {
     }
 
     @Override
-    public BehaviorDto searchById(int id) {
-        try {
-            return dao.searchById(id);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
-        }
-    }
-
-    @Override
     public List<BehaviorDto> searchSimilarByName(String name) {
         try {
             return dao.searchSimilarByName(name);

@@ -8,7 +8,6 @@ public interface BehaviorService {
     void add(BehaviorDto behaviorDto);
     void update(BehaviorDto behaviorDto);
     void remove(int id);
-    BehaviorDto searchById(int id);
     List<BehaviorDto> searchSimilarByName(String name);
     List<BehaviorDto> searchSimilarByName(String name, String sortColumn, String sortDirection);
     List<BehaviorDto> searchByScore(int minScore, int maxScore);
