@@ -86,8 +86,12 @@ public class InstructorDaoImp implements InstructorDao {
             stmt.setInt(1, id);
 
             rs = stmt.executeQuery();
-            result.setInstructorId(rs.getInt("instructor_id"));
-            result.setName(rs.getString("name"));
+            if(rs.next()) {
+                result.setInstructorId(rs.getInt("instructor_id"));
+                result.setName(rs.getString("name"));
+            }else{
+                return null;
+            }
         } finally {
             dbutil.close(stmt, con);
         }

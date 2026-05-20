@@ -85,9 +85,13 @@ public class BehaviorDaoImp implements BehaviorDao {
             stmt.setInt(1, id);
 
             rs = stmt.executeQuery();
-            result.setBehaviorId(rs.getInt("behavior_id"));
-            result.setName(rs.getString("name"));
-            result.setScore(rs.getInt("score"));
+            if(rs.next()) {
+                result.setBehaviorId(rs.getInt("behavior_id"));
+                result.setName(rs.getString("name"));
+                result.setScore(rs.getInt("score"));
+            }else{
+                return null;
+            }
         } finally {
             dbutil.close(stmt, con);
         }

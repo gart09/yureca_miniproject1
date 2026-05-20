@@ -46,8 +46,8 @@ public class StudentDaoImp implements StudentDao {
             int idx = 1;
 
             stmt.setString(idx++, StudentDto.getName());
-            stmt.setInt(idx++, StudentDto.getScore());
             stmt.setInt(idx++, StudentDto.getAge());
+            stmt.setInt(idx++, StudentDto.getScore());
             stmt.setInt(idx++, StudentDto.getStudentId());
 
             stmt.executeUpdate();
@@ -88,8 +88,14 @@ public class StudentDaoImp implements StudentDao {
             stmt.setInt(1, id);
 
             rs = stmt.executeQuery();
-            result.setStudentId(rs.getInt("student_id"));
-            result.setName(rs.getString("name"));
+            if(rs.next()) {
+                result.setStudentId(rs.getInt("student_id"));
+                result.setName(rs.getString("name"));
+                result.setAge(rs.getInt("age"));
+                result.setScore(rs.getInt("score"));
+            }else{
+                return null;
+            }
         } finally {
             dbutil.close(stmt, con);
         }
