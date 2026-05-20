@@ -979,5 +979,6 @@ public class MainFrame extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JLabel("최근 이력 조회 기능은 준비중입니다."), BorderLayout.CENTER);
         return panel;
+        
     }
 }
