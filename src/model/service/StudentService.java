@@ -1,5 +1,6 @@
 package model.service;
 
+import model.dto.InstructorDto;
 import model.dto.StudentDto;
 
 import java.sql.SQLException;
@@ -9,6 +10,7 @@ public interface StudentService {
     void add(StudentDto studentDto);
     void update(StudentDto studentDto);
     void remove(int id);
+    StudentDto searchById(int id);
     List<StudentDto> searchSimilarByName(String name);
     List<StudentDto> searchSimilarByName(String name, String sortColumn, String sortDirection);
     List<StudentDto> searchByScore(int minScore, int maxScore);
