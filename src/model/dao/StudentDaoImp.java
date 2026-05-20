@@ -302,45 +302,5 @@ public class StudentDaoImp implements StudentDao {
         return result;
 	}
 	
-	@Override
-	public List<StudentDto> searchRecentHistory(boolean isReward) throws SQLException {
-		Connection con = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        List<StudentDto> result = new ArrayList<>();
-        
-        // 상점: > , 벌점: <
-        String operator = isReward ? ">" : "<";
-        
-        String sql = "SELECT s.student_id, s.name, s.age, s.score, "
-                + "       b.name as behavior_name, h.score as behavior_score, h.date "
-                + "FROM studentScoreHistory h "
-                + "INNER JOIN student s ON h.student_id = s.student_id "
-                + "INNER JOIN behavior b ON h.behavior_id = b.behavior_id "
-                + "WHERE b.score " + operator + " 0 "
-                + "ORDER BY h.date DESC, h.history_id DESC "
-                + "LIMIT 1";
-		
-        try {
-            con = dbutil.getConnection();
-            stmt = con.prepareStatement(sql);
-
-            rs = stmt.executeQuery();
-            while(rs.next()){
-                StudentDto StudentDto = new StudentDto();
-                StudentDto.setStudentId(rs.getInt("student_id"));
-                StudentDto.setName(rs.getString("name"));
-                StudentDto.setAge(rs.getInt("age"));
-                StudentDto.setScore(rs.getInt("score"));
-
-                result.add(StudentDto);
-            }
-        } finally {
-            dbutil.close(rs, stmt, con);
-        }
-
-        return result;
-	}
-	
 	
 }

@@ -9,6 +9,8 @@ public interface EvaluationService {
     void add(int instructorId, int studentId, int behaviorId);
     void remove(int evaluationId);
     List<EvaluationDetailDto> searchAll();
+    List<EvaluationDetailDto> searchRecentRewardedStudents(); // 상점
+    List<EvaluationDetailDto> searchRecentPenalizedStudents(); // 벌점
     List<EvaluationDetailDto> getStudentAllEvaluation(int studentId);
     List<EvaluationDetailDto> getInstructorAllEvaluation(int instructorId);
 }

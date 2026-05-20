@@ -72,4 +72,16 @@ public class EvaluationServiceImp implements EvaluationService {
             throw new RuntimeException("데이터베이스 등록 중 시스템 오류가 발생했습니다.", e);
         }
     }
+
+	@Override
+	public List<EvaluationDetailDto> searchRecentRewardedStudents() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<EvaluationDetailDto> searchRecentPenalizedStudents() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

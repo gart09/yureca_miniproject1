@@ -15,8 +15,6 @@ public interface StudentService {
     List<StudentDto> searchSimilarByName(String name, String sortColumn, String sortDirection);
     List<StudentDto> searchByScore(int minScore, int maxScore);
     List<StudentDto> searchTopPercent(int persent);
-    List<StudentDto> searchRecentRewardedStudents(); // 상점
-    List<StudentDto> searchRecentPenalizedStudents(); // 벌점
     List<StudentDto> searchAll();
     List<StudentDto> searchAll(String sortColumn, String sortDirection);
 }

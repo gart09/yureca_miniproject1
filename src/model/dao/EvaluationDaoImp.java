@@ -187,4 +187,12 @@ public class EvaluationDaoImp implements EvaluationDao {
         }
         return result;
     }
+
+	@Override
+	public List<EvaluationDetailDto> searchRecentHistory(boolean isReward) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
 }
