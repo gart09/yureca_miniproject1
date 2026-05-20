@@ -221,7 +221,7 @@ public class StudentDaoImp implements StudentDao {
                 result.add(StudentDto);
             }
         } finally {
-            dbutil.close(rs, stmt, con);
+            dbutil.close(stmt, con);
         }
 
         return result;
@@ -240,37 +240,7 @@ public class StudentDaoImp implements StudentDao {
 
 	@Override
 	public List<StudentDto> searchTopPercent(int percent) throws SQLException {
-		Connection con = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        List<StudentDto> result = new ArrayList<>();
-        String subquery = "( SELECT student_id, name, age, score"
-                + ", PERCENT_RANK() OVER (ORDER BY score DESC) as pct"
-                + " FROM student )";
-        String sql = "SELECT student_id, name, age, score, concat(round(pct * 100, 2), '%') as 백분율"
-                + " FROM " + subquery + " as ranked_student"
-                + " WHERE pct <= (? / 100.0)";
-
-        try {
-            con = dbutil.getConnection();
-            stmt = con.prepareStatement(sql);
-            stmt.setInt(1, percent);
-
-            rs = stmt.executeQuery();
-            while(rs.next()){
-                StudentDto StudentDto = new StudentDto();
-                StudentDto.setStudentId(rs.getInt("student_id"));
-                StudentDto.setName(rs.getString("name"));
-                StudentDto.setAge(rs.getInt("age"));
-                StudentDto.setScore(rs.getInt("score"));
-
-                result.add(StudentDto);
-            }
-        } finally {
-            dbutil.close(rs, stmt, con);
-        }
-
-        return result;
-
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
