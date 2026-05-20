@@ -49,7 +49,9 @@ public class ModifyDialog extends JDialog {
         if (type.equals("학생") || type.equals("강사")) {
             gbc.gridx = 0; gbc.gridy = 2;
             formPanel.add(new JLabel("나이:"), gbc);
-            ageField = new JTextField(model.getColumnCount() > 2 ? model.getValueAt(selectedRow, 2).toString() : "");
+            // 학생, 강사 테이블에서 나이는 2번째 인덱스 (3번째 컬럼)
+            String ageValue = model.getValueAt(selectedRow, 2) != null ? model.getValueAt(selectedRow, 2).toString() : "";
+            ageField = new JTextField(ageValue);
             gbc.gridx = 1;
             formPanel.add(ageField, gbc);
         }
@@ -58,8 +60,10 @@ public class ModifyDialog extends JDialog {
             int gridy = type.equals("학생") ? 3 : 2;
             gbc.gridx = 0; gbc.gridy = gridy;
             formPanel.add(new JLabel("점수:"), gbc);
+            // 학생 테이블 점수는 3번째 인덱스, 행동 테이블 점수는 2번째 인덱스
             int scoreColIdx = type.equals("학생") ? 3 : 2;
-            scoreField = new JTextField(model.getColumnCount() > scoreColIdx ? model.getValueAt(selectedRow, scoreColIdx).toString() : "");
+            String scoreValue = model.getValueAt(selectedRow, scoreColIdx) != null ? model.getValueAt(selectedRow, scoreColIdx).toString() : "";
+            scoreField = new JTextField(scoreValue);
             gbc.gridx = 1;
             formPanel.add(scoreField, gbc);
         }

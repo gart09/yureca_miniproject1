@@ -2,6 +2,7 @@ package model.service;
 
 import model.dao.StudentDao;
 import model.dao.StudentDaoImp;
+import model.dto.InstructorDto;
 import model.dto.StudentDto;
 
 import java.sql.SQLException;
@@ -38,6 +39,16 @@ public class StudentServiceImp implements  StudentService {
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("데이터베이스 수정 중 시스템 오류가 발생했습니다.", e);
+        }
+    }
+
+    @Override
+    public StudentDto searchById(int id) {
+        try {
+            return dao.searchById(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("데이터베이스 조회 중 시스템 오류가 발생했습니다.", e);
         }
     }
 
