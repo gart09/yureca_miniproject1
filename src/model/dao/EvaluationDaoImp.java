@@ -119,7 +119,8 @@ public class EvaluationDaoImp implements EvaluationDao {
                 "FROM evaluation e " +
                 "JOIN instructor i ON e.instructor_id = i.instructor_id " +
                 "JOIN student s ON e.student_id = s.student_id " +
-                "JOIN behavior b ON e.behavior_id = b.behavior_id";
+                "JOIN behavior b ON e.behavior_id = b.behavior_id" +
+                "WHERE e.student_id = ?";
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
@@ -163,7 +164,8 @@ public class EvaluationDaoImp implements EvaluationDao {
                 "FROM evaluation e " +
                 "JOIN instructor i ON e.instructor_id = i.instructor_id " +
                 "JOIN student s ON e.student_id = s.student_id " +
-                "JOIN behavior b ON e.behavior_id = b.behavior_id";
+                "JOIN behavior b ON e.behavior_id = b.behavior_id" +
+                "WHERE e.instructor_id = ?";
         try {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);

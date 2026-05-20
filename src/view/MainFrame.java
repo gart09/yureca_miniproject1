@@ -71,12 +71,15 @@ public class MainFrame extends JFrame {
         // Buttons at the bottom of the result list
         JPanel rightBottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
+        JButton btnHistory = new JButton("상벌점 기록");
         JButton btnModify = new JButton("수정");
         JButton btnDeleteSelected = new JButton("선택 항목 삭제");
         
+        btnHistory.addActionListener(e -> handleHistory());
         btnModify.addActionListener(e -> handleModify());
         btnDeleteSelected.addActionListener(e -> handleDelete());
 
+        rightBottomPanel.add(btnHistory);
         rightBottomPanel.add(btnModify);
         rightBottomPanel.add(btnDeleteSelected);
         rightPanel.add(rightBottomPanel, BorderLayout.SOUTH);
@@ -110,6 +113,33 @@ public class MainFrame extends JFrame {
         
         add(leftPanel, BorderLayout.CENTER);
         setLocationRelativeTo(null);
+    }
+
+    private void handleHistory() {
+        int selectedRow = resultTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "기록을 조회할 항목을 리스트에서 선택해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String currentTab = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
+        try {
+            if (currentTab.equals("학생")) {
+                int studentId = (int) resultTable.getValueAt(selectedRow, 0);
+                String studentName = (String) resultTable.getValueAt(selectedRow, 1);
+                List<EvaluationDetailDto> history = evaluationService.getStudentAllEvaluation(studentId);
+                new EvaluationHistoryDialog(this, studentName, history, true).setVisible(true);
+            } else if (currentTab.equals("강사")) {
+                int instructorId = (int) resultTable.getValueAt(selectedRow, 0);
+                String instructorName = (String) resultTable.getValueAt(selectedRow, 1);
+                List<EvaluationDetailDto> history = evaluationService.getInstructorAllEvaluation(instructorId);
+                new EvaluationHistoryDialog(this, instructorName, history, false).setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(this, "이 탭에서는 상벌점 기록 조회를 지원하지 않습니다.", "안내", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "기록 조회 중 오류 발생: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void handleDelete() {
@@ -476,27 +506,21 @@ public class MainFrame extends JFrame {
     }
 
     private void updateEvaluationTable(List<EvaluationDetailDto> evaluations) {
-        // 평가 이력 테이블: 번호, 강사이름, 학생이름, 학생점수(평가후), 행동안건, 부여점수, 시기
-        String[] columnNames = {"이력ID", "강사", "학생", "학생점수", "행동", "부여점수", "일시"};
+        String[] columnNames = {"이력ID", "강사", "학생", "행동", "부여점수", "일시"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
 
-        // LocalDateTime을 보기 좋게 출력하기 위한 포매터 설정
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         for (EvaluationDetailDto dto : evaluations) {
-            // 날짜 포맷 적용 (null 안전성 확보)
             String dateStr = "";
-            // IDE 자동 생성 getter 이름이 getEvaluated_at()인지 getEvaluatedAt()인지 확인 후 맞춰주세요.
             if (dto.getEvaluatedAt() != null) {
                 dateStr = dto.getEvaluatedAt().format(formatter);
             }
 
-            // DTO에 이미 모든 데이터가 담겨 있으므로 바로 JTable 모델에 추가합니다.
             model.addRow(new Object[]{
                     dto.getEvaluationId(),
                     dto.getInstructorName(),
                     dto.getStudentName(),
-                    dto.getStudentScore(),
                     dto.getBehaviorName(),
                     dto.getBehaviorScore(),
                     dateStr
