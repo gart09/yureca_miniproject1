@@ -169,7 +169,6 @@ public class EvaluationDaoImp implements EvaluationDao {
             con = dbutil.getConnection();
             stmt = con.prepareStatement(sql);
             stmt.setInt(1, instructorId);
-            ResultSet rs = null;
             rs = stmt.executeQuery();
             while (rs.next()) {
                 EvaluationDetailDto evaluationDetailDto = new EvaluationDetailDto();
