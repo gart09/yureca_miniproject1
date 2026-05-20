@@ -961,5 +961,6 @@ public class MainFrame extends JFrame {
         panel.add(loadHistoryBtn, BorderLayout.NORTH);
         
         return panel;
+        
     }
 }
