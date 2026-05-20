@@ -2,11 +2,13 @@ package view;
 
 import model.dto.BehaviorDto;
 import model.dto.CanNotFindException;
-import model.dto.DuplicateBehaviorException;
+import model.dto.EvaluationDto;
 import model.dto.InstructorDto;
 import model.dto.StudentDto;
 import model.service.BehaviorService;
 import model.service.BehaviorServiceImp;
+import model.service.EvaluationService;
+import model.service.EvaluationServiceImp;
 import model.service.InstructorService;
 import model.service.InstructorServiceImp;
 import model.service.StudentService;
@@ -28,6 +30,7 @@ public class MainFrame extends JFrame {
     private BehaviorService behaviorService;
     private StudentService studentService;
     private InstructorService instructorService;
+    private EvaluationService evaluationService;
     private JTabbedPane tabbedPane;
     private TableCellRenderer defaultHeaderRenderer;
     private boolean behaviorHeaderSortingEnabled;
@@ -56,6 +59,7 @@ public class MainFrame extends JFrame {
         behaviorService = new BehaviorServiceImp();
         studentService = new StudentServiceImp();
         instructorService = new InstructorServiceImp();
+        evaluationService = new EvaluationServiceImp();
 
         // Right half: Result List and Action Buttons
         JPanel rightPanel = new JPanel(new BorderLayout());
@@ -71,15 +75,12 @@ public class MainFrame extends JFrame {
         // Buttons at the bottom of the result list
         JPanel rightBottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        JButton btnSort = new JButton("정렬");
         JButton btnModify = new JButton("수정");
         JButton btnDeleteSelected = new JButton("선택 항목 삭제");
         
-        btnSort.addActionListener(e -> handleSort());
         btnModify.addActionListener(e -> handleModify());
         btnDeleteSelected.addActionListener(e -> handleDelete());
 
-        rightBottomPanel.add(btnSort);
         rightBottomPanel.add(btnModify);
         rightBottomPanel.add(btnDeleteSelected);
         rightPanel.add(rightBottomPanel, BorderLayout.SOUTH);
@@ -105,7 +106,7 @@ public class MainFrame extends JFrame {
         rewardPanel.setBorder(BorderFactory.createTitledBorder("상벌점"));
         
         JButton btnRewardPenalty = new JButton("상벌점 부여");
-        btnRewardPenalty.addActionListener(e -> new RewardPenaltyFrame(behaviorService).setVisible(true));
+        btnRewardPenalty.addActionListener(e -> new RewardPenaltyFrame(studentService, instructorService, behaviorService, evaluationService).setVisible(true));
         rewardPanel.add(btnRewardPenalty);
         bottomPanel.add(rewardPanel, BorderLayout.CENTER);
 
@@ -148,10 +149,6 @@ public class MainFrame extends JFrame {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "삭제 중 오류가 발생했습니다: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void handleSort() {
-        // ... (unchanged)
     }
 
     private void installResultTableHeaderClickHandler() {
@@ -465,6 +462,7 @@ public class MainFrame extends JFrame {
             behaviorSortDirection = null;
         }
 
+        // 행동 테이블에서 '상점여부' 제거
         String[] columnNames = {"ID", "이름", "점수"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
         for (BehaviorDto dto : behaviors) {
@@ -474,17 +472,41 @@ public class MainFrame extends JFrame {
         currentResultType = "행동";
 
         if (resultTable.getColumnModel().getColumnCount() > 1) {
-            // 인덱스 1번 ("이름" 열)을 가져옵니다.
             javax.swing.table.TableColumn nameColumn = resultTable.getColumnModel().getColumn(1);
-
-            // 원하는 기본 너비를 지정합니다. (예: 200 픽셀)
-            nameColumn.setPreferredWidth(200);
-
-            // 필요하다면 최소/최대 너비도 제한할 수 있습니다.
-            // nameColumn.setMinWidth(150);
+            nameColumn.setPreferredWidth(200); // 이름 열 너비 증가
         }
 
         setBehaviorHeaderSortingEnabled(true);
+    }
+
+    private void updateEvaluationTable(List<EvaluationDto> evaluations) {
+        // 평가 이력 테이블: 번호, 강사이름, 학생이름, 학생점수(평가후), 행동안건, 부여점수, 시기
+        String[] columnNames = {"이력ID", "강사", "학생", "학생점수", "행동", "부여점수", "일시"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+        for (EvaluationDto dto : evaluations) {
+            // InstructorDto, StudentDto, BehaviorDto 정보 가져오기 시도
+            String instName = "ID:" + dto.getInstructorId();
+            try { instName = instructorService.searchById(dto.getInstructorId()).getName(); } catch (Exception e) {}
+            
+            String stuName = "ID:" + dto.getStudentId();
+            try { stuName = studentService.searchById(dto.getStudentId()).getName(); } catch (Exception e) {}
+            
+            String behName = "ID:" + dto.getBehaviorId();
+            try { behName = behaviorService.searchById(dto.getBehaviorId()).getName(); } catch (Exception e) {}
+
+            model.addRow(new Object[]{
+                dto.getEvaluationId(),
+                instName,
+                stuName,
+                dto.getStudentScore(),
+                behName,
+                dto.getGivenScore(),
+                dto.getEvaluationDate()
+            });
+        }
+        resultTable.setModel(model);
+        currentResultType = "평가이력";
+        setBehaviorHeaderSortingEnabled(false); // 평가 이력은 헤더 정렬 비활성화
     }
 
     private SortState getBehaviorSortState(int modelColumn) {
@@ -606,19 +628,22 @@ public class MainFrame extends JFrame {
         gbcSearch.insets = new Insets(10, 10, 10, 10);
         gbcSearch.fill = GridBagConstraints.HORIZONTAL;
         
-        gbcSearch.gridx = 0; gbcSearch.gridy = 0; gbcSearch.weightx = 0.3;
+        gbcSearch.gridx = 0; gbcSearch.gridy = 0; gbcSearch.gridwidth = 2;
+        JLabel hintLabel = new JLabel("빈 칸으로 검색하시면 전체 조회가 됩니다.");
+        hintLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        hintLabel.setForeground(Color.GRAY);
+        searchPanel.add(hintLabel, gbcSearch);
+
+        gbcSearch.gridwidth = 1;
+        gbcSearch.gridx = 0; gbcSearch.gridy = 1; gbcSearch.weightx = 0.3;
         searchPanel.add(new JLabel("이름:"), gbcSearch);
         JTextField nameField = new JTextField(10);
-        gbcSearch.gridx = 1; gbcSearch.gridy = 0; gbcSearch.weightx = 0.7;
+        gbcSearch.gridx = 1; gbcSearch.gridy = 1; gbcSearch.weightx = 0.7;
         searchPanel.add(nameField, gbcSearch);
         
         JButton btnSearch = new JButton("학생 조회");
         gbcSearch.gridx = 0; gbcSearch.gridy = 2; gbcSearch.gridwidth = 2;
         searchPanel.add(btnSearch, gbcSearch);
-
-        JButton btnSearchAll = new JButton("전체 조회");
-        gbcSearch.gridx = 0; gbcSearch.gridy = 3; gbcSearch.gridwidth = 2;
-        searchPanel.add(btnSearchAll, gbcSearch);
         
         btnSearch.addActionListener(e -> {
             try {
@@ -632,15 +657,6 @@ public class MainFrame extends JFrame {
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        btnSearchAll.addActionListener(e -> {
-            try {
-                setStudentAllMode();
-                updateStudentTable(studentService.searchAll());
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             }
         });
         
@@ -699,19 +715,22 @@ public class MainFrame extends JFrame {
         gbcSearch.insets = new Insets(10, 10, 10, 10);
         gbcSearch.fill = GridBagConstraints.HORIZONTAL;
         
-        gbcSearch.gridx = 0; gbcSearch.gridy = 0; gbcSearch.weightx = 0.3;
+        gbcSearch.gridx = 0; gbcSearch.gridy = 0; gbcSearch.gridwidth = 2;
+        JLabel hintLabel = new JLabel("빈 칸으로 검색하시면 전체 조회가 됩니다.");
+        hintLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        hintLabel.setForeground(Color.GRAY);
+        searchPanel.add(hintLabel, gbcSearch);
+
+        gbcSearch.gridwidth = 1;
+        gbcSearch.gridx = 0; gbcSearch.gridy = 1; gbcSearch.weightx = 0.3;
         searchPanel.add(new JLabel("이름:"), gbcSearch);
         JTextField nameField = new JTextField(10);
-        gbcSearch.gridx = 1; gbcSearch.gridy = 0; gbcSearch.weightx = 0.7;
+        gbcSearch.gridx = 1; gbcSearch.gridy = 1; gbcSearch.weightx = 0.7;
         searchPanel.add(nameField, gbcSearch);
         
         JButton btnSearch = new JButton("강사 조회");
         gbcSearch.gridx = 0; gbcSearch.gridy = 2; gbcSearch.gridwidth = 2;
         searchPanel.add(btnSearch, gbcSearch);
-
-        JButton btnSearchAll = new JButton("전체 조회");
-        gbcSearch.gridx = 0; gbcSearch.gridy = 3; gbcSearch.gridwidth = 2;
-        searchPanel.add(btnSearchAll, gbcSearch);
         
         btnSearch.addActionListener(e -> {
             try {
@@ -725,15 +744,6 @@ public class MainFrame extends JFrame {
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        btnSearchAll.addActionListener(e -> {
-            try {
-                setInstructorAllMode();
-                updateInstructorTable(instructorService.searchAll());
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             }
         });
         
@@ -794,17 +804,22 @@ public class MainFrame extends JFrame {
         GridBagConstraints gbcName = new GridBagConstraints();
         gbcName.insets = new Insets(10, 10, 10, 10);
         gbcName.fill = GridBagConstraints.HORIZONTAL;
-        gbcName.gridx = 0; gbcName.gridy = 0; gbcName.weightx = 0.3;
+        
+        gbcName.gridx = 0; gbcName.gridy = 0; gbcName.gridwidth = 2;
+        JLabel hintLabel1 = new JLabel("빈 칸으로 검색하시면 전체 조회가 됩니다.");
+        hintLabel1.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        hintLabel1.setForeground(Color.GRAY);
+        namePanel.add(hintLabel1, gbcName);
+
+        gbcName.gridwidth = 1;
+        gbcName.gridx = 0; gbcName.gridy = 1; gbcName.weightx = 0.3;
         namePanel.add(new JLabel("이름:"), gbcName);
         JTextField nameField = new JTextField(10);
-        gbcName.gridx = 1; gbcName.gridy = 0; gbcName.weightx = 0.7;
+        gbcName.gridx = 1; gbcName.gridy = 1; gbcName.weightx = 0.7;
         namePanel.add(nameField, gbcName);
         JButton searchByNameBtn = new JButton("이름으로 조회");
-        gbcName.gridx = 0; gbcName.gridy = 1; gbcName.gridwidth = 2;
-        namePanel.add(searchByNameBtn, gbcName);
-        JButton searchAllByNameTabBtn = new JButton("전체 조회");
         gbcName.gridx = 0; gbcName.gridy = 2; gbcName.gridwidth = 2;
-        namePanel.add(searchAllByNameTabBtn, gbcName);
+        namePanel.add(searchByNameBtn, gbcName);
         behaviorSearchTabs.addTab("이름으로 조회", namePanel);
 
         searchByNameBtn.addActionListener(e -> {
@@ -822,36 +837,32 @@ public class MainFrame extends JFrame {
             }
         });
 
-        searchAllByNameTabBtn.addActionListener(e -> {
-            try {
-                setBehaviorAllMode();
-                updateBehaviorTable(behaviorService.searchAll());
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
         // 점수로 조회 탭
         JPanel scorePanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbcScore = new GridBagConstraints();
         gbcScore.insets = new Insets(10, 5, 10, 5);
         gbcScore.fill = GridBagConstraints.HORIZONTAL;
-        gbcScore.gridx = 0; gbcScore.gridy = 0; gbcScore.weightx = 0.2;
+
+        gbcScore.gridx = 0; gbcScore.gridy = 0; gbcScore.gridwidth = 4;
+        JLabel hintLabel2 = new JLabel("입력으로 넣은 값 사이의 행동들이 출력됩니다.");
+        hintLabel2.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        hintLabel2.setForeground(Color.GRAY);
+        scorePanel.add(hintLabel2, gbcScore);
+
+        gbcScore.gridwidth = 1;
+        gbcScore.gridx = 0; gbcScore.gridy = 1; gbcScore.weightx = 0.2;
         scorePanel.add(new JLabel("점수:"), gbcScore);
         JTextField minScoreField = new JTextField(3);
-        gbcScore.gridx = 1; gbcScore.gridy = 0; gbcScore.weightx = 0.3;
+        gbcScore.gridx = 1; gbcScore.gridy = 1; gbcScore.weightx = 0.3;
         scorePanel.add(minScoreField, gbcScore);
-        gbcScore.gridx = 2; gbcScore.gridy = 0; gbcScore.weightx = 0.1;
+        gbcScore.gridx = 2; gbcScore.gridy = 1; gbcScore.weightx = 0.1;
         scorePanel.add(new JLabel("~", SwingConstants.CENTER), gbcScore);
         JTextField maxScoreField = new JTextField(3);
-        gbcScore.gridx = 3; gbcScore.gridy = 0; gbcScore.weightx = 0.3;
+        gbcScore.gridx = 3; gbcScore.gridy = 1; gbcScore.weightx = 0.3;
         scorePanel.add(maxScoreField, gbcScore);
         JButton searchByScoreBtn = new JButton("점수로 조회");
-        gbcScore.gridx = 0; gbcScore.gridy = 1; gbcScore.gridwidth = 4;
-        scorePanel.add(searchByScoreBtn, gbcScore);
-        JButton searchAllByScoreTabBtn = new JButton("전체 조회");
         gbcScore.gridx = 0; gbcScore.gridy = 2; gbcScore.gridwidth = 4;
-        scorePanel.add(searchAllByScoreTabBtn, gbcScore);
+        scorePanel.add(searchByScoreBtn, gbcScore);
         behaviorSearchTabs.addTab("점수로 조회", scorePanel);
         
         searchByScoreBtn.addActionListener(e -> {
@@ -866,15 +877,6 @@ public class MainFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "점수는 숫자로 입력해주세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
             } catch (CanNotFindException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "조회 실패", JOptionPane.WARNING_MESSAGE);
-            }
-        });
-
-        searchAllByScoreTabBtn.addActionListener(e -> {
-            try {
-                setBehaviorAllMode();
-                updateBehaviorTable(behaviorService.searchAll());
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "전체 조회 중 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             }
         });
         
@@ -923,7 +925,18 @@ public class MainFrame extends JFrame {
 
     private JPanel createHistorySearchPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("최근 이력 조회 기능은 준비중입니다."), BorderLayout.CENTER);
+        
+        JButton loadHistoryBtn = new JButton("최근 이력 전체 조회");
+        loadHistoryBtn.addActionListener(e -> {
+            try {
+                updateEvaluationTable(evaluationService.searchAll());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "이력 조회 실패: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        panel.add(loadHistoryBtn, BorderLayout.NORTH);
+        
         return panel;
     }
 }

@@ -72,6 +72,29 @@ public class BehaviorDaoImp implements BehaviorDao {
     }
 
     @Override
+    public BehaviorDto searchById(int id) throws SQLException {
+        Connection con = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        BehaviorDto result = new BehaviorDto();
+        String sql = "SELECT * FROM behavior WHERE behavior_id = ?";
+
+        try {
+            con = dbutil.getConnection();
+            stmt = con.prepareStatement(sql);
+            stmt.setInt(1, id);
+
+            rs = stmt.executeQuery();
+            result.setBehaviorId(rs.getInt("behavior_id"));
+            result.setName(rs.getString("name"));
+            result.setScore(rs.getInt("score"));
+        } finally {
+            dbutil.close(stmt, con);
+        }
+        return result;
+    }
+
+    @Override
     public List<BehaviorDto> searchSimilarByName(String name) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
