@@ -544,7 +544,7 @@ public class MainFrame extends JFrame {
     }
 
     private void updateEvaluationTable(List<EvaluationDetailDto> evaluations) {
-        String[] columnNames = {"이력ID", "강사", "학생", "행동", "부여점수", "일시"};
+        String[] columnNames = {"이력ID", "강사", "학생", "학생점수", "행동", "부여점수", "일시"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
 
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -559,6 +559,7 @@ public class MainFrame extends JFrame {
                     dto.getEvaluationId(),
                     dto.getInstructorName(),
                     dto.getStudentName(),
+                    dto.getStudentScore(),
                     dto.getBehaviorName(),
                     dto.getBehaviorScore(),
                     dateStr
