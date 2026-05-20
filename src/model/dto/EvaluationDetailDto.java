@@ -76,7 +76,7 @@ public class EvaluationDetailDto {
         return evaluatedAt;
     }
 
-    public void setEvaluatedAt(LocalDateTime evaluated_at) {
+    public void setEvaluatedAt(LocalDateTime evaluatedAt) {
         this.evaluatedAt = evaluatedAt;
     }
 }

@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBUtil {
-    static final String URL ="jdbc:mysql://localhost:3306/ureca_miniproject?serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true";
+    static final String URL ="jdbc:mysql://localhost:3306/ureca_miniproject?serverTimezone=Asia/Seoul&useUniCode=yes&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true";
     static final String DRIVER="com.mysql.cj.jdbc.Driver";
     static final String ID="ureca";
     static final String PW="ureca";
