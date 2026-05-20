@@ -247,7 +247,7 @@ public class StudentDaoImp implements StudentDao {
         String subquery = "( SELECT student_id, name, age, score"
                 + ", PERCENT_RANK() OVER (ORDER BY score DESC) as pct"
                 + " FROM student )";
-        String sql = "SELECT student_id, name, age, score, concat(round(pct * 100, 2), '%') as 백분율"
+        String sql = "SELECT student_id, name, age, score"
                 + " FROM " + subquery + " as ranked_student"
                 + " WHERE pct <= (? / 100.0)";
 
